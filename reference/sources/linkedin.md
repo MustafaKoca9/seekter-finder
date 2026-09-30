@@ -172,5 +172,6 @@ Notes:
 - **"How many years" and salary fields are number-only.** Text returns "Invalid input". Clear with `End` + many `BackSpace` presses (triple_click, ctrl+a and Delete don't work).
 - Easy Apply can wrap Greenhouse questions; a consent may be a `select`, not a checkbox.
 - Use `browser_batch` so click and type happen in one round trip. Separate calls let the modal shift.
+- **On the Additional Questions page a click by `ref` does not focus the input, and the typed text is dropped silently.** Measured 30 Sept on a 4-page Easy Apply with two mandatory questions: `find` returned the right element, `computer left_click` on that ref reported success, `type` reported success, and both fields still read `0/20 characters` with `value === ''`. There is no error and no visual cue; the only tell is reading `.value` back. A **coordinate click** on the same field, from a fresh screenshot, worked first time for both. So on this page: screenshot, click by coordinate, type, then verify `.value` before pressing Review.
 - Closing the modal asks "Save this application?". Choose `Discard` for jobs that don't fit.
 - Cost is about 6 tool calls per application, with no upload and no CAPTCHA.
