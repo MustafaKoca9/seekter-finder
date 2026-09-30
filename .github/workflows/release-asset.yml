@@ -1,0 +1,60 @@
+name: release asset
+
+# The landing page's primary button points at
+# /releases/latest/download/seekter.zip. That path is the only URL GitHub
+# offers that always resolves to the newest release: the source archive it
+# generates on its own is pinned to a tag (/archive/refs/tags/v0.1.0.zip), and
+# there is no "latest" equivalent of it. /releases/latest/download/<name>
+# resolves against an asset uploaded to the release, so the asset has to exist
+# and has to be named exactly seekter.zip.
+#
+# A release published without it does not fail loudly. It leaves the site's
+# main call to action answering 404, and nothing in the repository would say
+# so. Attaching it from memory on each release is exactly the kind of step that
+# gets skipped, so it is attached here instead.
+#
+# The archive is `git archive`, so it carries tracked files only: no .git, and
+# nothing the candidate owns. The audit step below enforces that second part
+# rather than assuming it, for the same reason leak-scan.yml exists — the
+# private paths hold .gitkeep placeholders on purpose, and an empty placeholder
+# is fine, but a file with content under one of them must never ship.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the archive from the tagged tree
+        run: |
+          set -euo pipefail
+          git archive --format=zip --prefix=seekter/ -o seekter.zip HEAD
+          unzip -t seekter.zip > /dev/null
+          echo "Archive built: $(unzip -Z1 seekter.zip | wc -l | tr -d ' ') files."
+
+      - name: Nothing of the candidate's may ship inside it
+        run: |
+          set -euo pipefail
+          BAD=$(unzip -l seekter.zip \
+                | awk '$1 ~ /^[0-9]+$/ && $1 > 0 && $4 ~ /^seekter\/(profile|applications|runs)\// { print $1" bytes  "$4 }')
+          if [ -n "$BAD" ]; then
+            echo "::error::The archive carries a non-empty file under a private path. These are the candidate's data and must never be published."
+            echo "$BAD"
+            exit 1
+          fi
+          echo "No private path in the archive holds anything but empty placeholders."
+
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload "${{ github.event.release.tag_name }}" seekter.zip --clobber
+          echo "seekter.zip attached to ${{ github.event.release.tag_name }}."
