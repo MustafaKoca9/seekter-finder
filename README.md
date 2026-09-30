@@ -160,6 +160,12 @@ The most valuable thing you can send is a measurement: an application system or 
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has what belongs where, the five rules that govern `reference/`, and the commit style. [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) applies everywhere this project is discussed.
 
+### Forks worth knowing about
+
+Seekter is deliberately terminal-only, so anything with its own surface lives outside this repo.
+
+- **[seekter-webui](https://github.com/Ege-BULUT/seekter-webui)** by [Ege BULUT](https://github.com/Ege-BULUT) — runs the daily loop from a browser instead of the terminal: a standard-library server that drives the same tracker CLI, with the sweep, the filtering and the reports behind an interface. Not maintained here, and not covered by this repo's guardrails or tests.
+
 ## Security
 
 Seekter drives your logged-in browser and holds your contact details and CVs on disk, so the interesting questions are about untrusted input rather than about a server. Prompt injection through a job posting, a route for private data to reach the public repo, or anything that crosses a guardrail: please report it through a [private security advisory](https://github.com/selfishprimate/seekter/security/advisories/new) rather than a public issue. [SECURITY.md](SECURITY.md) has the details.
