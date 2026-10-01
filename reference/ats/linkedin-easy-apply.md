@@ -25,6 +25,27 @@
   if(/privacy notice/i.test(txt)){const cb=[...document.querySelectorAll('input[type=checkbox]')].filter(e=>e.offsetParent||e.id)[0];if(cb&&!cb.checked){const lb=[...document.querySelectorAll('label')].find(l=>l.getAttribute('for')===cb.id);if(lb)lb.click();await new Promise(r=>setTimeout(r,500));}}
   ```
   The driver misses consents rendered as a `<select>` — pick those manually.
+- ⛔ **The driver above is written in English and the UI may not be.** Measured 1 Oct: the account renders `lang="tr"`, so the Easy Apply button is **"Kolay Başvuru"** with `aria-label="Bu işe kolay başvuru yapın"`, and the step buttons are **İleri** (Next), **İncele** (Review) and **Başvuruyu gönder** (Submit application). Every English-name check fails silently against that, which does not read as a language problem: the detection simply returns "no Easy Apply on this posting", and two live postings were written off as closed before the cause was found. **Do not match button text. Find the modal from its heading and take the last non-cancel button in it**, which works in any language:
+  ```js
+  window.M=()=>{const leaf=[...document.querySelectorAll('*')].find(e=>e.children.length===0&&/başvuru yap|apply to/i.test(e.textContent||''));
+    if(!leaf)return null;let p=leaf;for(let i=0;i<12;i++){p=p.parentElement;if(p&&(p.innerText||'').length>200)break;}return p;};
+  window.NEXT=()=>{const p=window.M();const b=[...p.querySelectorAll('button')].filter(x=>x.offsetParent&&(x.innerText||'').trim());
+    const c=b.filter(x=>!/kapat|close|iptal|cancel|geri|back|düzenle|edit/i.test(x.innerText));c[c.length-1].click();};
+  ```
+  The modal is **not** `[role=dialog]` either; the only two elements carrying that role are video.js placeholders, both hidden. Find it by its heading text.
+- **Open the modal with a JS MouseEvent dispatch, not with a click.** Measured 1 Oct across six postings: `find` plus a ref click never worked once, and a coordinate click worked on some postings and not others, needing two or three attempts and sometimes failing entirely. Dispatching `mousedown`, `mouseup`, `click` on the button opened it first time, every time:
+  ```js
+  const b=[...document.querySelectorAll('button')].find(x=>x.offsetParent&&/kolay başvuru|easy apply/i.test((x.getAttribute('aria-label')||'')+(x.innerText||'')));
+  ['mousedown','mouseup','click'].forEach(t=>b.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window})));
+  ```
+  The same dispatch is also what unticks the follow checkbox on the review page when a coordinate click on it does nothing.
+  Why the fallbacks fail is worth knowing so the dispatch is not abandoned too early: a coordinate click is swallowed entirely while the job page is still painting its skeleton, and that state can last ten seconds or more, during which the button is already in the DOM and already findable. A page whose description never finishes loading never accepts the click at all.
+- ⛔ **Read the work-authorization options, never assume their order.** Measured 1 Oct: HireTalent asked sponsorship first and authorization second; Cassidy, the same day, asked them the other way round. The radios are unlabelled in the DOM, so the only way to tell is to walk up from each one to the question text. Clicking by index on an assumed order answers both questions wrong, and both are knockouts.
+- **The coordinate frame changes between postings, not just between sessions.** Measured 1 Oct: 1558 on one job page and 1512 on the next, inside one run. A `K` computed on the previous posting puts the click about 20px off, which on a radio is a complete miss that reports nothing. Re-read the frame width from the tool output on every screenshot.
+
+- **Check which address the email dropdown holds.** It is a `<select>` listing every address on the account, and on this one that includes a second personal address the profile forbids. Read `select.value` before advancing and set it to the application address if it is anything else.
+- **The "follow this company" checkbox on the review page is pre-ticked.** It is an opt-in the candidate did not ask for; untick it before submitting.
+
 - **Set values:** `<select>`: native setter + `change`. Text: `form_input`/setter. Click+type in one `browser_batch` (separate calls → modal shifts).
 - **Radios/checkboxes:** radios are 0×0; real `left_click` at the centre of `label[for=<radio id>]`. Fallback: click radio → `space`. **On the work-authorization page, go straight to the fallback.** Measured 24 Sept (SoTalent): clicks landed dead centre on both circles, confirmed by zoom, and `.checked` stayed false for all four options; click-then-`space` set each one first try. JS `.click()` unreliable — verify `.checked`. Checkbox "Element type DIV is not a supported form input" → `scroll_to` + coordinate click.
 - **Typeahead:** Location can't be JS-set: ref-click → type city → 3 s → click suggestion by coordinate (`Return` fails here). "Location (city)" may be pre-filled yet look empty — typing appends; `End` + `BackSpace`s, then pick.

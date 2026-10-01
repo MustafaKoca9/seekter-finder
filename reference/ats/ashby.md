@@ -29,6 +29,8 @@
   ['mousedown','mouseup','click'].forEach(t=>b.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window})));
   ```
   Verify `aria-pressed` (older tenants: `aria-checked`) → `"true"` (visually: filled dark = selected, outline = focus only).
+- **A tenant can also ask for country of residence as its own combobox, and the answer is proof the role is open.** Measured 1 Oct (SplitMetrics): the posting header read `Remote - Europe Time Zones; Portugal; Serbia; Spain`, which under the country-list rule looks like a closed door for anyone outside it. The form carried a separate required `input[role=combobox]`, "Please select your current country of residence", and typing `Turkey` offered **Türkiye**. A country the employer has put in its own residence list is the strongest signal available that the location header was shorthand, stronger than anything in the description. Read that field before deciding a header has closed the role.
+  On this tenant the four `button[data-option]` groups ignored ref-clicks entirely, all four still reading `aria-pressed="false"` after a click and a two-second wait; **coordinate clicks set them first time**. That is the per-tenant split already described above, with SplitMetrics on the coordinate side.
 - **Date fields are a calendar, not a text input.** A question like "When can you start a new role?" renders as `input` with placeholder `Pick date...`; typing into it does nothing. Ref-click it, wait 3 s, then click the day cell. Today's cell carries the class `…datepicker__day--today`, so locate it rather than counting grid positions:
   ```js
   [...document.querySelectorAll('div')].filter(e=>/datepicker__day--today/.test((e.className||'').toString()))[0]
