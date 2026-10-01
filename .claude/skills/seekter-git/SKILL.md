@@ -95,7 +95,73 @@ gh pr create --title "<same voice as the commit subject>" --body "<what changed 
 
 The remote is the candidate's own GitHub. **Never enable auto-merge and never merge**, unless the user asks in the same breath. Report the PR URL and stop.
 
-## 6. Guardrails
+## 6. After the merge: does this deserve a version?
+
+Runs only when the user says the PR is merged **and** asks for a version. Never on
+its own. A release is public, and publishing one waits for their word the same way
+the PR did.
+
+The version lives in git tags and nowhere else. There is no `VERSION` file to edit,
+on purpose: one place to be wrong instead of two.
+
+1. **Stand on what was actually merged.** Tag the merge commit on `main`, never a
+   branch head.
+
+```bash
+git switch main && git pull --ff-only && git status --short
+python3 -m unittest discover tests
+git log <last-tag>..main --oneline
+```
+
+A dirty tree or a failing test stops this.
+
+2. **Pick the number.** Patch (`0.1.0` → `0.1.1`) for a defect the people on the
+   previous version are living with: a source that silently does nothing, a promise
+   in a skill that nothing keeps. Minor (`0.1.x` → `0.2.0`) for a new source, a new
+   ATS, a new command — anything that makes the kit do something it could not do
+   before. **`1.0.0` is reserved for the Claude Code plugin** and is not reached by
+   accumulation.
+
+3. **Write the notes into `CHANGELOG.md`, and release from that file.** The
+   changelog is the only copy that survives into the downloaded zip, so it is
+   written first and the release is cut from it; GitHub gets the same text rather
+   than a second version of it.
+
+   Write in the voice of §4. The subject of a release is what was wrong, not which
+   files moved. Someone on the previous version needs to know whether it was
+   happening to them, so describe how the defect presents and what it cost, with
+   the dates and measurements the commits already carry — *"it fails silently,
+   which is what makes it expensive"* does more work than a changelog line. Close
+   with an **Upgrading** paragraph; it is usually "nothing to migrate, your
+   `profile/`, `applications/` and `runs/` are git-ignored and untouched", and
+   saying so is the point.
+
+   The entry has to be in the commit the tag points at, which is why this is its
+   own small branch and pull request rather than something added after the fact.
+   §3 to §5 apply to it like any other shipment. **Show the entry to the user and
+   publish only after they say so.** Once that pull request is merged, pull `main`
+   again and release from the section you just wrote:
+
+```bash
+gh release create v<x.y.z> --title "v<x.y.z>" --notes-file <section of CHANGELOG.md>
+```
+
+4. **Fetch the tag back.** `gh release create` creates it on GitHub, not in this
+   clone, so `git describe --tags` keeps reporting the previous version until you
+   run `git fetch origin --tags`. The next session reads that.
+
+5. **Verify the asset.** `.github/workflows/release-asset.yml` fires on publish and
+   attaches `seekter.zip`. The site's download button points at
+   `/releases/latest/download/seekter.zip`, which resolves only while that asset
+   exists, and a workflow failure does not fail the release: it leaves a published
+   version with a dead download.
+
+```bash
+gh release view v<x.y.z> --json assets --jq '.assets[].name'
+curl -sIL -o /dev/null -w '%{http_code}\n' https://github.com/<owner>/seekter/releases/latest/download/seekter.zip
+```
+
+## 7. Guardrails
 
 - **Never commit `profile/`, `applications/` or `runs/`**, and never weaken `.gitignore` to make something pass. If a reference note cannot be written without a private value, the note is wrong, not the rule.
 - **Never rewrite published history.** No `--force`, no `--amend` on anything already pushed.
