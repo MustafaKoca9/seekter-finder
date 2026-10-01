@@ -2,6 +2,8 @@
 
 # Seekter
 
+[![version](https://img.shields.io/github/v/release/selfishprimate/seekter?label=version)](https://github.com/selfishprimate/seekter/releases/latest)
+
 A job-search agent for Claude Code. It searches job sources every day, filters postings against **your** rules (location, visa, salary, sectors, seniority, language), fills application forms in your own Chrome, and keeps every application and skip as a markdown file you can read, grep and diff.
 
 It was built over a month of daily use by one job seeker and then emptied of personal data, so it's opinionated where the lessons were expensive: dedup before every form, never guess an answer, never invent an anecdote, never touch a CAPTCHA or a password. **Nothing in the tracked files assumes a field**: the titles, queries, boards and filters all come from your profile, and `/seekter-init` builds them from your answers. The measurements in `reference/` were taken in one discipline and say so where it matters.
@@ -143,6 +145,8 @@ tests/              tracker CLI tests: python3 -m unittest discover tests
 .github/            leak scan and test workflows · issue and pull request templates
 profile/  applications/  runs/     ← yours, git-ignored
 ```
+
+There is no version file. The version is the git tag — `git describe --tags` — and what changed between tags is in [CHANGELOG.md](CHANGELOG.md).
 
 `reference/` is the part worth contributing back: every ATS quirk and source behaviour there was measured in real applications.
 
