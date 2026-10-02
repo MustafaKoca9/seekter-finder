@@ -1,4 +1,4 @@
-![Seekter — job search, filtered by your rules](images/seekter-og-image.jpg)
+<img src="images/seekter-cover.jpg" alt="Seekter — job search, filtered by your rules" width="100%">
 
 # Seekter
 
@@ -177,3 +177,5 @@ Seekter drives your logged-in browser and holds your contact details and CVs on 
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+<img src="images/seekter-thank-you.jpg" alt="Thank you for using Seekter" width="100%">
