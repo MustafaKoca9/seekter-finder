@@ -40,6 +40,12 @@
   ```
   The same dispatch is also what unticks the follow checkbox on the review page when a coordinate click on it does nothing.
   Why the fallbacks fail is worth knowing so the dispatch is not abandoned too early: a coordinate click is swallowed entirely while the job page is still painting its skeleton, and that state can last ten seconds or more, during which the button is already in the DOM and already findable. A page whose description never finishes loading never accepts the click at all.
+- ⛔ **`NEXT()` is the Submit button on a single-page form. Read the step counter before calling it.** Measured 2 Oct (Aquent): the modal opened with no `n/4 sayfa` counter, `NEXT()` took the last non-cancel button as designed, and that button was **Başvuruyu gönder**. The application went in on the first call, with no review step. Nothing false was sent, because the email, phone and CV card are verified on the contact page before advancing, but the review page is also where the pre-ticked follow-this-company checkbox is unticked, and that opt-in was left on. The fix is one line before every `NEXT()`:
+  ```js
+  const pages=(window.M().innerText.match(/(\d+)\s*\/\s*(\d+)\s*sayfa|page\s*(\d+)\s*of\s*(\d+)/i)||[])[0]||'single page';
+  ```
+  A modal with no counter is one page, so the next button press submits. Read the whole modal and decide to submit deliberately, rather than discovering it afterwards.
+
 - ⛔ **Read the work-authorization options, never assume their order.** Measured 1 Oct: HireTalent asked sponsorship first and authorization second; Cassidy, the same day, asked them the other way round. The radios are unlabelled in the DOM, so the only way to tell is to walk up from each one to the question text. Clicking by index on an assumed order answers both questions wrong, and both are knockouts.
 - **The coordinate frame changes between postings, not just between sessions.** Measured 1 Oct: 1558 on one job page and 1512 on the next, inside one run. A `K` computed on the previous posting puts the click about 20px off, which on a radio is a complete miss that reports nothing. Re-read the frame width from the tool output on every screenshot.
 
