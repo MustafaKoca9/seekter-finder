@@ -6,6 +6,8 @@ Written by `/seekter-init`. Every value is concrete; the engine never fills a ga
 
 Last updated: {{DATE}}.
 
+Disclaimer accepted: {{DISCLAIMER_ACCEPTED_DATE}} (`DISCLAIMER.md`, asked at the start of `/seekter-init`).
+
 ---
 
 ## 1. Identity and contact

@@ -24,6 +24,8 @@ Placeholders in the reference docs (`<FIRST_NAME>`, `<EMAIL>`, `<PHONE_LOCAL>`, 
 
 If `profile/profile.md` is missing or still contains `{{`, stop and run `/seekter-init`.
 
+If the profile has no `Disclaimer accepted:` line with a date (a profile written before the line existed), show the disclaimer sentence from `/seekter-init` once, word for word. No: stop the run. Yes: add the line with today's date, then continue.
+
 Then:
 1. `python3 scripts/seekter.py stats` to see the tracker's size. Dedup is `python3 scripts/seekter.py check <url> --company <name>`: exit code 1 = already tracked.
 2. Open a task list in this order: the four source steps below, then **"Filter and rank"**, then **"Apply"**, then "Log to tracker" and "Report". Applying is one task at the end, not something interleaved with the sweeping, for the reason in §1.

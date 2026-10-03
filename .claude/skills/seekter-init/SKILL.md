@@ -13,10 +13,18 @@ The goal is a complete `profile/profile.md` (from `templates/profile.md`) and `p
 - **Draft, then confirm.** If a CV (or a LinkedIn profile saved as PDF) is available, read it first and turn questions into confirmations ("Your CV says 8 years in this field. Correct?"). Never write a value from the CV without the user confirming it.
 - **Skippable.** "Skip" or "later" writes `ASK` and moves on. Sensitive items (birth date, ethnicity, disability, gender, salary history) default to "prefer not to say" unless the user volunteers a value.
 - **Resumable.** After each answered section, save progress to `profile/.init-state.json` (`{"done": ["identity", ...], "answers": {...}}`) and write what's known into `profile/profile.md`. On restart, read the state file, say where you're resuming, and continue.
-- **Explain once why** at the start: "I'll ask about 40 short questions in 9 groups. Everything stays in `profile/`, which git ignores."
+- **Explain once why** at the start, right after the disclaimer: "I'll ask about 40 short questions in 9 groups. Everything stays in `profile/`, which git ignores."
 - Don't ask what you can derive: timezone from city, ASCII fallback from name, E.164 phone from local number + country.
 
 ## Order
+
+**Before anything else: the disclaimer.** Show this, as one message, before creating a folder or reading a file:
+
+> Before we start: Seekter sends applications in your name and you are responsible for what they say, the terms of the job sites you use are yours to follow, and it runs on your own paid Claude plan with no guarantee of results. Details are in [DISCLAIMER.md](DISCLAIMER.md). Shall we continue? (yes / no)
+
+- **No**, or anything that is not a yes: stop. Create nothing, write nothing, and say they can run `/seekter-init` again whenever they want.
+- **Yes**: keep the date in `profile/.init-state.json` and write it to the profile's `Disclaimer accepted:` line when the profile is first written. Then continue.
+- Don't paraphrase it into something softer or longer, and don't ask it again on a resumed run that already has the date.
 
 0. **Setup check.** Create `profile/`, `profile/documents/`, `applications/`, `runs/` if missing. If `profile/profile.md` already exists, ask: update section by section, or start over (keep a copy as `profile/profile.backup-<date>.md`).
 1. **Documents first** (they make the rest faster). Ask for the CV file path(s). Copy them into `profile/documents/` keeping the file name. Ask which is the default and whether another CV is for a different role type. Optional: portfolio PDF.
