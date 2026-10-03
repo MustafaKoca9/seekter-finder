@@ -4,6 +4,104 @@ The version is the git tag; there is no version file. Each release is also on
 [the releases page](https://github.com/selfishprimate/seekter/releases) with the
 same text.
 
+## v0.2.0 — 4 October 2026
+
+The release that changes what Seekter does on LinkedIn. Until now it filled
+Easy Apply forms and searched LinkedIn through its internal API, and LinkedIn
+restricts accounts for exactly that. Nothing in the kit said so. This version
+stops acting on LinkedIn, makes reading it a choice you make knowingly, and
+tells you what you take on before the first run.
+
+### Seekter was automating LinkedIn, and LinkedIn restricts accounts for it
+
+LinkedIn's help page on prohibited software does not permit browser extensions
+that "scrape, modify the appearance of, or automate activity on LinkedIn's
+website", and says accounts that use them risk being restricted or shut down.
+Seekter drives your browser through an extension. On 0.1.x a daily run filled
+Easy Apply, ran around 40 searches through LinkedIn's internal API and harvested
+the notification feed, all from your own account. If you have been running it
+daily, that is what LinkedIn has been seeing. The User Agreement also rules out
+the obvious fallback of a second account.
+
+Now:
+
+- **Easy Apply is never filled, in any mode**, and no action is taken on
+  LinkedIn: no saving, following, messaging or alert editing. Easy Apply
+  postings come back to you in the report as a list to send yourself.
+- **By default Seekter does not open LinkedIn at all** (`linkedin.mode: email`).
+  It reads your LinkedIn job-alert emails in your inbox and finds each posting
+  on the employer's own application system. A digest mail shows only about six
+  of its matches (measured 4 Oct: "30+ new jobs" above six cards), so narrow
+  alerts lose much less than broad ones.
+- **Reading LinkedIn is opt-in** (`linkedin.mode: read`), and setup asks with a
+  plain warning that it is against LinkedIn's terms. It is read-only and
+  limited: at most 15 searches and 60 job details per run, 3 seconds apart, one
+  at a time. A "too many requests" error, a security-check or login redirect, or
+  an unusual-activity page stops it for the run and switches the mode back to
+  `email`.
+
+The cost is volume. On 2 Oct the searches found 352 postings and the alert
+feed 63, so `email` mode on its own finds far fewer.
+
+### Your own links come first
+
+Finding a posting takes a person seconds; filling its form is the work. Paste
+links into the chat or drop them in `profile/links.txt` (git-ignored), and they
+are filled before every other source. A LinkedIn job link is fine: Seekter
+finds the employer's own form behind it, or hands it back to you if it is Easy
+Apply.
+
+### Nobody was told what they were taking on
+
+Seekter sends applications in your name, uses other sites under their terms
+and runs on a paid Claude plan. None of that was written down, and "Seekter is
+free" read as the whole story.
+
+- `DISCLAIMER.md`: what you are responsible for, whose terms you follow, no
+  warranty, no affiliation, and that Seekter is free but running it is not.
+- `PRIVACY.md`: Seekter collects nothing, and this is where your data goes
+  while it works: Anthropic, the employers you apply to, the job sources, and
+  your inbox, read-only.
+- `/seekter-init` now opens with one sentence covering those points and goes on
+  only on a yes. The README has the same three points above Quick start.
+
+### The references spoke one candidate's language
+
+The kit was written during one person's job search, and twenty-odd reference
+files used that person's language and country as their examples: translated
+button labels, local search terms, a city spelled two ways, a dial code. A user
+elsewhere would have needed their own copy of each line. Every lesson is still
+there, now written to hold in any language and country, with `<CITY>`,
+`<COUNTRY>` and `+<code>` where a place is needed.
+
+### Also
+
+Twelve form-system traps measured on 2 Oct, among them:
+
+- Ashby can show a filled field as "Missing entry"; filling it a second way
+  clears it, and the first Submit may only blur the field.
+- Lever validates every `urls[...]` field as a URL, so free text in one fails
+  the submit silently.
+- Teamtailor's required Address can be a location search box that a script
+  cannot fill.
+- CleverStaff uploads the CV and then rejects the form anyway, until the file is
+  tied to its field.
+- Oracle Cloud HCM creates an account on its first screen, so it is handed to
+  you.
+- Google Forms records the signed-in Google account's email with an upload,
+  which may not be the address your profile names.
+
+### Upgrading
+
+- The next `/seekter-run` asks you the disclaimer once. A no stops the run.
+- Your profile starts in `email` mode. Create your LinkedIn job alerts with
+  **Email** delivery, one per row of `linkedin.searches` in
+  `profile/search.json`, narrow rather than broad. To keep reading LinkedIn
+  searches yourself, set `linkedin.mode` to `read`; Easy Apply stays off either
+  way.
+- Nothing else to migrate. `profile/`, `applications/` and `runs/` are
+  git-ignored and untouched.
+
 ## v0.1.2 — 2 October 2026
 
 A bug-fix release. Two of the three fixes are about things the kit did without
