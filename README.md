@@ -8,6 +8,14 @@ A job-search agent for Claude Code. It searches job sources every day, filters p
 
 It was built over a month of daily use by one job seeker and then emptied of personal data, so it's opinionated where the lessons were expensive: dedup before every form, never guess an answer, never invent an anecdote, never touch a CAPTCHA or a password. **Nothing in the tracked files assumes a field**: the titles, queries, boards and filters all come from your profile, and `/seekter-init` builds them from your answers. The measurements in `reference/` were taken in one discipline and say so where it matters.
 
+> [!IMPORTANT]
+> **Before you run it**
+> - Every application goes out in your name, and you are responsible for what it says.
+> - Seekter never fills LinkedIn Easy Apply. Reading LinkedIn is off by default; switching it on is against LinkedIn's terms and puts your account at risk.
+> - Seekter is free, but running it needs a paid Claude plan or an Anthropic API account.
+>
+> Read [DISCLAIMER.md](DISCLAIMER.md) for the details.
+
 ## Quick start
 
 ```bash
@@ -22,7 +30,7 @@ Then, inside Claude Code:
 /seekter-run        # today's search and applications
 ```
 
-Requirements: [Claude Code](https://docs.claude.com/en/docs/claude-code), the Claude in Chrome extension, Python 3.9+ and `curl`. No packages.
+Requirements: [Claude Code](https://docs.claude.com/en/docs/claude-code) (a paid Claude plan or an Anthropic API account; Seekter itself is free, running it is not), the Claude in Chrome extension, Python 3.9+ and `curl`. No packages.
 
 ## Commands
 
@@ -153,6 +161,12 @@ There is no version file. The version is the git tag â€” `git describe --tags` â
 ## Privacy
 
 `profile/`, `applications/` and `runs/` are in `.gitignore`. Your data stays on your machine unless you remove those lines. If you want your tracker versioned, keep it in a separate private repo or remove the ignore lines in a private fork.
+
+What Claude, employers and job sources see while Seekter works is in [PRIVACY.md](PRIVACY.md).
+
+## Responsible use
+
+Applications go out in your name, and the terms of LinkedIn, job boards and application systems are yours to follow. Read [DISCLAIMER.md](DISCLAIMER.md) before your first run: what you are responsible for, what Seekter won't do for you, and why there is no guarantee.
 
 ## Guardrails
 
