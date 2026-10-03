@@ -107,3 +107,5 @@
   ```
   The native setter writes past `maxlength` without complaint, so a setter-filled free-text answer can silently exceed a limit that real typing would have capped.
 - **The `Remove` button under an attached file does not respond to clicks while that stale error is showing** — not to a ref click, not to a coordinate click on the button in a fresh screenshot. To swap a CV, **reload the posting URL and refill**: the whole form is a setter pass plus one upload, so a rebuild is faster than fighting the AJAX, and it clears the error too.
+
+- **Drupal-wrapped tenants can carry a visible reCAPTCHA v2.** Measured 2 Oct on okta.com: native `<select>`s and plain inputs that take the setter, Drupal AJAX file upload (a Remove button appears when it lands), and a `g-recaptcha` box 78px tall, which is the "I'm not a robot" checkbox. Fill everything, leave the tab open, hand off for the tick and Submit.

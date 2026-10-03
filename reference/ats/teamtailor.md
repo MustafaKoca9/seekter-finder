@@ -37,3 +37,4 @@
 - **A post-submit re-render can look exactly like a validation failure**: the form comes back empty with
   a red required-consent message. Before refilling, reload the posting and look for "You already applied
   for this job", which is Teamtailor's own applied marker.
+- **A required "Address" can be a geocoder, `candidate[location][query]`, placeholder "Start typing your address".** A native setter on it leaves it empty and submit fails with "Address can't be blank" and no other sign. Click it, type the city, wait for the suggestion list, click "<CITY>, <COUNTRY>". Measured 2 Oct (C Teleport).
