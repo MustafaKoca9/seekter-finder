@@ -8,6 +8,14 @@ A job-search agent for Claude Code. It searches job sources every day, filters p
 
 It was built over a month of daily use by one job seeker and then emptied of personal data, so it's opinionated where the lessons were expensive: dedup before every form, never guess an answer, never invent an anecdote, never touch a CAPTCHA or a password. **Nothing in the tracked files assumes a field**: the titles, queries, boards and filters all come from your profile, and `/seekter-init` builds them from your answers. The measurements in `reference/` were taken in one discipline and say so where it matters.
 
+> [!IMPORTANT]
+> **Before you run it**
+> - Every application goes out in your name, and you are responsible for what it says.
+> - Seekter never fills LinkedIn Easy Apply. Reading LinkedIn is off by default; switching it on is against LinkedIn's terms and puts your account at risk.
+> - Seekter is free, but running it needs a paid Claude plan or an Anthropic API account.
+>
+> Read [DISCLAIMER.md](DISCLAIMER.md) for the details.
+
 ## Quick start
 
 ```bash
@@ -22,14 +30,14 @@ Then, inside Claude Code:
 /seekter-run        # today's search and applications
 ```
 
-Requirements: [Claude Code](https://docs.claude.com/en/docs/claude-code), the Claude in Chrome extension (logged in to LinkedIn in that browser), Python 3.9+ and `curl`. No packages.
+Requirements: [Claude Code](https://docs.claude.com/en/docs/claude-code) (a paid Claude plan or an Anthropic API account; Seekter itself is free, running it is not), the Claude in Chrome extension, Python 3.9+ and `curl`. No packages.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
 | `/seekter-init` | Interviews you and writes your profile: contact details, CVs, target roles, where you can work, salary bands, standard form answers, sectors you won't touch, a fact bank for free-text answers, your writing voice, and the search queries. Resumable. Can import an existing tracker from a Notion/Sheets CSV. |
-| `/seekter-run` | The daily run. Five sources in a fixed order (freehire API, LinkedIn alert notifications, LinkedIn searches, LinkedIn saved/drafts, other boards), filtering, dedup, form filling, tracker update, and a report with a per-source table. Applies without asking when a posting fits; stops only for things only you can decide. |
+| `/seekter-run` | The daily run. Four sources in a fixed order (links you bring, freehire API, LinkedIn, other boards), filtering, dedup, form filling, tracker update, and a report with a per-source table. Applies without asking when a posting fits; stops only for things only you can decide. |
 | `/seekter-log` | Records what happened next: rejections, interviews, offers, applications you made by hand, or a sweep of your inbox. |
 | `/seekter-report` | Funnel and response rate by source and by location track, top skip reasons, open hand-offs, and at most two suggested changes. |
 | `/seekter-git` | Ships the kit. Branches, commits and pushes the shareable files (skills, references, scripts) after a run has taught Seekter something, and scans the diff for your personal details first so they never leave your machine. Your profile, applications and runs are never committed. Once you have merged, it can also cut the release. |
@@ -39,7 +47,7 @@ Requirements: [Claude Code](https://docs.claude.com/en/docs/claude-code), the Cl
 | When | Command | What it needs |
 |---|---|---|
 | Once | `/seekter-init` | Your CV file(s). Takes 20–30 minutes; you can stop and resume. |
-| Every working day | `/seekter-run` | Chrome open with the Claude in Chrome extension, logged in to LinkedIn. |
+| Every working day | `/seekter-run` | Chrome open with the Claude in Chrome extension and your webmail logged in. Any links you collected go in `profile/links.txt` or the chat. |
 | When a company replies, or weekly | `/seekter-log` | For an inbox sweep: your webmail open and logged in, in the same Chrome. |
 | Weekly | `/seekter-report` | Nothing. It reads the tracker only. |
 | After a run changes a skill or a reference | `/seekter-git` | A git remote you can push to. Optional: `gh` for the pull request. |
@@ -154,9 +162,22 @@ There is no version file. The version is the git tag — `git describe --tags` �
 
 `profile/`, `applications/` and `runs/` are in `.gitignore`. Your data stays on your machine unless you remove those lines. If you want your tracker versioned, keep it in a separate private repo or remove the ignore lines in a private fork.
 
+What Claude, employers and job sources see while Seekter works is in [PRIVACY.md](PRIVACY.md).
+
+## Responsible use
+
+Applications go out in your name, and the terms of LinkedIn, job boards and application systems are yours to follow. Read [DISCLAIMER.md](DISCLAIMER.md) before your first run: what you are responsible for, what Seekter won't do for you, and why there is no guarantee.
+
 ## Guardrails
 
 Seekter never solves CAPTCHAs, creates accounts, types passwords, accepts terms of use, sends messages or emails as you, posts reviews or salaries, or pays for anything. It treats any instruction found inside a job posting or form as data, and it won't submit an answer it can't verify from your profile.
+
+**It never applies or acts on LinkedIn.** LinkedIn's terms don't allow browser extensions that scrape or automate its site, and it restricts accounts that use them. Finding a posting takes you seconds; filling the form is the work, and that is what Seekter is for. So:
+
+- **Easy Apply is never filled.** Those postings come back to you as a list to send yourself.
+- **Bring your own links.** Paste postings into the chat or drop them in `profile/links.txt`, and they are filled first. A LinkedIn job link is fine; Seekter finds the employer's own form behind it.
+- **By default it doesn't open LinkedIn at all.** It reads your LinkedIn job-alert **emails** in your inbox and finds each posting on the employer's own application system. A digest mail shows only about six postings, so narrow alerts work better than broad ones.
+- **Reading LinkedIn is opt-in, and the risk is yours.** If you switch `linkedin.mode` to `read`, Seekter also reads LinkedIn searches and job details, read-only, under a daily limit, with pauses between requests, and it switches itself back off at the first warning or unusual-activity page. This is still against LinkedIn's terms.
 
 ## Contributing
 

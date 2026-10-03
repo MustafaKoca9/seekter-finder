@@ -16,7 +16,7 @@ If you find a shape of text that gets past that — something in a posting or a 
 
 **A path for private data to reach the public repository.** `profile/`, `applications/` and `runs/` are git-ignored, and `/seekter-git` plus the CI leak scan check the staged diff for identity values. If you find a way for a name, an email address, a phone number or a CV to be committed anyway — a reference note that quotes one, a script that writes outside the ignored paths, a scan that can be walked past — report it.
 
-**Anything that crosses a guardrail.** Seekter must never solve or bypass a CAPTCHA, create an account, type a password, accept terms of use for the user, send a message or an email as the user, post a review or a salary, or pay for anything. A way to make it do one of those is a vulnerability, even if it takes an unusual posting to trigger.
+**Anything that crosses a guardrail.** Seekter must never solve or bypass a CAPTCHA, create an account, type a password, accept terms of use for the user, send a message or an email as the user, post a review or a salary, pay for anything, fill LinkedIn Easy Apply or take any other action on LinkedIn, or read LinkedIn when the user has not opted in. A way to make it do one of those is a vulnerability, even if it takes an unusual posting to trigger.
 
 **Anything that acts outside the task.** The agent has a real browser session with real logins. A path that gets it to act on an account beyond filling the application in front of it — changing settings, deleting mail, posting, authorising an app — counts.
 

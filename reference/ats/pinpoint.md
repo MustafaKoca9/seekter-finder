@@ -17,6 +17,6 @@
     .map(e=>(e.id||e.name)+' | '+e.validationMessage);
   ```
   Measured 24 Sept (Group O): this named the blocker instantly as a required "Allow us to process your personal information" consent that no error message ever mentioned. A scan for empty `required` fields found nothing, because the blocker was an unticked checkbox.
-- **Phone is `intl-tel-input` and defaults to the US flag.** Unlike the Dice settings field it is not locked: typing the full `+90…` switches the flag to "Turkey (Türkiye): +90" and keeps every digit. Type E.164 and verify the flag's `title`.
-- Country is a plain `<select>` whose option text is **"Türkiye"**. Address is split into Address Line 1 / Town / Postcode, all free text, so a non-US address goes in unchanged. The "Find Address" geocoder above them can be left alone.
+- **Phone is `intl-tel-input` and defaults to the US flag.** Unlike the Dice settings field it is not locked: typing the full number with its country code switches the flag to that country and keeps every digit. Type E.164 and verify the flag's `title`.
+- Country is a plain `<select>`; the option may carry the country's native name rather than its English one. Address is split into Address Line 1 / Town / Postcode, all free text, so a non-US address goes in unchanged. The "Find Address" geocoder above them can be left alone.
 - Equality-monitoring selects (gender, ethnicity, age bracket, disability) are optional and carry a "Prefer Not To Say" option; leave them blank.

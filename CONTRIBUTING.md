@@ -29,7 +29,7 @@ A note stays just as useful when the person is removed from it:
 > ✅ *the phone widget renders the number in spaced national format, so the value read back does not match the value typed*
 > ❌ *typing 5xx xxx xx xx into the phone widget reads back as …*
 
-A country or city named as a genuine trap is fine and should stay — `typing "Istanbul" returns No data, the list wants "İstanbul"` is a reusable lesson about non-ASCII place names, not personal data.
+A trap about place names is fine and should stay — "the city list finds nothing for the English spelling and only matches the native one" is a reusable lesson, not personal data. Describe it in English rather than quoting one language's words, so it reads the same for everyone.
 
 **2. Measured, with a date.**
 "Greenhouse is fiddly" teaches nothing. Say what you ran, what happened, and when:
@@ -93,7 +93,7 @@ claude                                  # open Claude Code in the repo
 /seekter-run                            # the daily run
 ```
 
-You need [Claude Code](https://docs.claude.com/en/docs/claude-code), the Claude in Chrome extension logged in to LinkedIn, Python 3.9+ and `curl`. There is nothing to install and no build step.
+You need [Claude Code](https://docs.claude.com/en/docs/claude-code), the Claude in Chrome extension, Python 3.9+ and `curl`. There is nothing to install and no build step.
 
 ## Tests
 

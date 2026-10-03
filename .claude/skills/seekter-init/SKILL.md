@@ -10,13 +10,21 @@ The goal is a complete `profile/profile.md` (from `templates/profile.md`) and `p
 ## Rules for the interview
 
 - **One question per message.** Short, plain, in the user's language. Offer choices with the question tool when the answer is one of a few options; free text otherwise.
-- **Draft, then confirm.** If a CV or LinkedIn URL is available, read it first and turn questions into confirmations ("Your CV says 8 years in this field. Correct?"). Never write a value from the CV without the user confirming it.
+- **Draft, then confirm.** If a CV (or a LinkedIn profile saved as PDF) is available, read it first and turn questions into confirmations ("Your CV says 8 years in this field. Correct?"). Never write a value from the CV without the user confirming it.
 - **Skippable.** "Skip" or "later" writes `ASK` and moves on. Sensitive items (birth date, ethnicity, disability, gender, salary history) default to "prefer not to say" unless the user volunteers a value.
 - **Resumable.** After each answered section, save progress to `profile/.init-state.json` (`{"done": ["identity", ...], "answers": {...}}`) and write what's known into `profile/profile.md`. On restart, read the state file, say where you're resuming, and continue.
-- **Explain once why** at the start: "I'll ask about 40 short questions in 9 groups. Everything stays in `profile/`, which git ignores."
-- Don't ask what you can derive: timezone from city, ASCII fallback from name, E.164 phone from local number + country, LinkedIn geoId from country (table in `reference/sources/linkedin.md`).
+- **Explain once why** at the start, right after the disclaimer: "I'll ask about 40 short questions in 9 groups. Everything stays in `profile/`, which git ignores."
+- Don't ask what you can derive: timezone from city, ASCII fallback from name, E.164 phone from local number + country.
 
 ## Order
+
+**Before anything else: the disclaimer.** Show this, as one message, before creating a folder or reading a file:
+
+> Before we start: Seekter sends applications in your name and you are responsible for what they say, the terms of the job sites you use are yours to follow, and it runs on your own paid Claude plan with no guarantee of results. Details are in [DISCLAIMER.md](DISCLAIMER.md). Shall we continue? (yes / no)
+
+- **No**, or anything that is not a yes: stop. Create nothing, write nothing, and say they can run `/seekter-init` again whenever they want.
+- **Yes**: keep the date in `profile/.init-state.json` and write it to the profile's `Disclaimer accepted:` line when the profile is first written. Then continue.
+- Don't paraphrase it into something softer or longer, and don't ask it again on a resumed run that already has the date.
 
 0. **Setup check.** Create `profile/`, `profile/documents/`, `applications/`, `runs/` if missing. If `profile/profile.md` already exists, ask: update section by section, or start over (keep a copy as `profile/profile.backup-<date>.md`).
 1. **Documents first** (they make the rest faster). Ask for the CV file path(s). Copy them into `profile/documents/` keeping the file name. Ask which is the default and whether another CV is for a different role type. Optional: portfolio PDF.
@@ -33,13 +41,16 @@ The goal is a complete `profile/profile.md` (from `templates/profile.md`) and `p
     - freehire `queries` (their target titles, lowercase) and `categories`: don't guess the taxonomy — run `curl -sS -A seekter "https://freehire.me/api/v1/jobs/facets?q=<their main title>"` and pick the categories that actually carry their field, then show them the counts.
     - `regions` and `home_country` from §6; `languages` from §1.
     - `title_keep`: the title families worth opening. `title_drop`: wrong seniority **plus the other industries that share their job title** — ask them which ones ("who else calls themselves this?"), because they know their field's collisions and you don't. The template's `_title_filters` comment holds a worked example from another discipline; use its shape, not its words.
-    - LinkedIn `searches`: one row per title family × geography, remote flag per §6; a second row without the remote flag for any geography where they can work on-site. geoIds from the table in `reference/sources/linkedin.md`.
+    - LinkedIn `searches`: one row per title family × geography (`keywords`, `location` for the alert, `geo_id` from the table in `reference/sources/linkedin.md`, `remote` per §6), plus a second row without the remote flag for any geography where they can work on-site. Each row is a job alert **they** create on LinkedIn, delivered by **Email**, and in `read` mode also a search Seekter runs. Apply the alert-quality rules from the same file while building the rows (no quotes, one row per title variant, EEA leaves out the UK and Switzerland, narrow beats broad because a digest mail shows only about six postings).
+    - LinkedIn `mode`: ask, and say this first, in plain words: "Seekter never fills Easy Apply and never takes an action on LinkedIn. By default it doesn't open LinkedIn at all: it reads your job-alert emails and any links you give it. It can also read LinkedIn searches and job details itself, with a daily limit and pauses, and it turns that off at the first warning. That is still against LinkedIn's terms, and LinkedIn can restrict accounts that do it. The risk is to your account. Do you want it on?" `email` unless they say yes; on a yes, write `read` and quote their answer in the profile's §10.
     - `boards`: ask which boards they already read. A niche board for their own discipline beats every generic remote board (`reference/sources/_core.md`, the report card). Every board they name needs a file in `reference/sources/`; a board with no file has never been measured.
     Show the finished list and let them trim it.
 11. **Tracker import (optional).** Ask whether they already track applications somewhere. Notion or any spreadsheet → export as CSV → `python3 scripts/import_csv.py <file>.csv --dry-run`, show the counts, then run it for real. This is what makes dedup work from day one.
 12. **Finish.** Write the final `profile/profile.md` (fill §10–§12, set "Last updated"), delete `profile/.init-state.json`, run `python3 scripts/seekter.py index`, then print:
     - which fields are still `ASK` (each one line),
-    - the browser prerequisite (Claude in Chrome extension, logged in to LinkedIn),
+    - the browser prerequisite (Claude in Chrome extension, with their webmail logged in in the same Chrome),
+    - the LinkedIn alerts to create by hand, one line each from `linkedin.searches`, delivered by Email,
+    - that they can drop links they find into `profile/links.txt` (or paste them in chat) and those are filled first,
     - the next command: `/seekter-run`.
 
 ## Writing the files

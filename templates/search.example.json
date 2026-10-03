@@ -14,12 +14,14 @@
     "window_days": 3
   },
   "linkedin": {
-    "_searches": "One row per title family x geography. Keywords unquoted (quotes cut recall). geo_id from the table in reference/sources/linkedin.md; 92000000 = Worldwide, 91000002 = EEA. remote = the f_WT=2 filter, which hides hybrid and on-site roles, so add a second row without it for any geography where the candidate can work on-site.",
-    "home_geo_id": "",
+    "_mode": "email (default): Seekter never opens LinkedIn; it reads the job-alert emails and the links the user brings. read: it also reads searches, the notification feed and job details, read-only, within read_limits, and switches itself back to email at the first warning. Only the user switches read on, after being told it is against LinkedIn's terms. Easy Apply is never filled in either mode. See reference/sources/linkedin.md.",
+    "mode": "email",
+    "read_limits": {"searches_per_run": 15, "details_per_run": 60, "min_gap_seconds": 3},
+    "_searches": "One row per title family x location. Each row is a job alert the candidate creates on LinkedIn (Email delivery) and, in read mode, a search Seekter runs. Keywords unquoted (quotes cut recall). location is for the alert; geo_id is for read-mode searches, from the table in reference/sources/linkedin.md (92000000 = Worldwide, 91000002 = EEA). remote = LinkedIn's Remote filter, which hides hybrid and on-site roles, so add a second row without it where the candidate can work on-site. EEA leaves out the UK and Switzerland.",
     "window": "r259200",
     "searches": [
-      {"keywords": "", "geo_id": "92000000", "remote": true},
-      {"keywords": "", "geo_id": "91000002", "remote": true}
+      {"keywords": "", "location": "Worldwide", "geo_id": "92000000", "remote": true},
+      {"keywords": "", "location": "European Economic Area", "geo_id": "91000002", "remote": true}
     ]
   },
   "_boards": "Job boards for this candidate's field, with how often they are worth a visit. reference/sources/_core.md rates the general ones and reference/sources/ has one file per measured board; niche boards are per-discipline, so ask the candidate which they already read.",

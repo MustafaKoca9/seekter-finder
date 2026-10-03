@@ -52,7 +52,7 @@ Then a pattern pass for anything the profile didn't list:
 **Two tiers, and they are not the same.**
 
 - **Blockers — identity.** Name, email address, phone in any format, street, postcode, personal domains, employer names from the candidate's own history. Do not commit. Rewrite the passage with the kit's placeholders (`<FIRST_NAME>`, `<EMAIL>`, `<PHONE_LOCAL>`, `<CV_NAME>`, `<CITY>`, `<POSTCODE>`, `<COUNTRY>`) and keep the lesson intact. A mechanics note is about the widget, never about the person, and it stays useful when the person is removed: *"the phone widget renders the number in spaced national format"* teaches exactly as much as the same sentence with a real number in it, and travels.
-- **Warnings — geography.** A country or city named as a worked example of ATS behaviour ("typing `Istanbul` returns No data, the list wants `İstanbul`"). This is a real, reusable trap about non-ASCII place names, so it may stay. Flag it, say why it stays, and move on. Don't launder it into uselessness.
+- **Warnings — geography.** A country or city named as a worked example of ATS behaviour (a city list that finds nothing for the English spelling and only matches the native spelling with its non-ASCII letters). That is a real, reusable trap, so the lesson stays; write it so it doesn't depend on one language's words. Flag it, say why it stays, and move on. Don't launder it into uselessness.
 
 Report the scan result before committing, even when it is clean. "Scanned, nothing found" is information.
 

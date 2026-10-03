@@ -1,6 +1,6 @@
 # ATS: core
 
-Placeholders: `<FIRST_NAME>`, `<LAST_NAME>`, `<FULL_NAME>`, `<EMAIL>`, `<PHONE_LOCAL>` (national number, no country code), `<PHONE_E164>` (`+90…`, no spaces), `<CITY>`, `<ADDRESS_LINE>`, `<POSTCODE>`, `<CV_NAME>`, `<CV_PATH>`. Values live in the candidate profile.
+Placeholders: `<FIRST_NAME>`, `<LAST_NAME>`, `<FULL_NAME>`, `<EMAIL>`, `<PHONE_LOCAL>` (national number, no country code), `<PHONE_E164>` (`+<country code>…`, no spaces), `<CITY>`, `<ADDRESS_LINE>`, `<POSTCODE>`, `<CV_NAME>`, `<CV_PATH>`. Values live in the candidate profile.
 
 ## How this folder is read
 
@@ -25,7 +25,7 @@ it. One file per vendor makes that impossible to write, because there is nowhere
 | Indeed SmartApply, which Glassdoor Easy Apply hands off to | `indeed-smartapply.md` |
 | join.com | `join-com.md` |
 | Lever | `lever.md` |
-| LinkedIn Easy Apply | `linkedin-easy-apply.md` |
+| LinkedIn Easy Apply (not automated, list for the user) | `linkedin-easy-apply.md` |
 | One-off and unbranded forms | `other-forms.md` |
 | Personio | `personio.md` |
 | Pinpoint | `pinpoint.md` |
@@ -49,7 +49,7 @@ Section = vendor name; BambooHR, Revolut and account walls → Hand off; Viterbi
 |---|---|
 | `job-boards.greenhouse.io/<co>/jobs/<id>`, `job-boards.eu.greenhouse.io/...`, `grnh.se/...`, `.../embed/job_app?for=<co>&token=<id>`, iframe with `greenhouse` in `src` | Greenhouse |
 | `jobs.ashbyhq.com/<co>/<uuid>` (or company domain with Ashby form) | Ashby |
-| `linkedin.com/jobs/view/<id>` with "Easy Apply" | LinkedIn Easy Apply |
+| any `linkedin.com` job URL | Not a form. In `read` mode read its details for the employer's apply URL; in `email` mode resolve it off LinkedIn (`reference/sources/linkedin.md`). Easy Apply → the user's list |
 | `*.myworkdayjobs.com` | Workday |
 | `jobs.lever.co/<co>/<id>`, `jobs.eu.lever.co/...` | Lever |
 | company careers domain with `/c/new`, `/applications/new`, `/applied` | Teamtailor |
@@ -80,7 +80,7 @@ Section = vendor name; BambooHR, Revolut and account walls → Hand off; Viterbi
   ```
   Clicks outside the frame error; clicks inside it at the wrong spot fail silently.
 - **Prefer JS `focus()` over coordinate clicks.** Error banners shift the page; stale coordinates hit other elements (once a CV trash icon). Coordinates only for radios/checkboxes/custom widgets, fresh screenshot before each; never chain clicks from one screenshot.
-- **Write one field, read back `value`, then pick the method for the rest.** Setter vs `form_input` vs real typing depends on tenant and field type, not vendor. Some tenants swallow ASCII on real typing (only Turkish letters survive); some reject Turkish characters ("Enter a valid name") → transliterate to ASCII.
+- **Write one field, read back `value`, then pick the method for the rest.** Setter vs `form_input` vs real typing depends on tenant and field type, not vendor. Some tenants swallow ASCII on real typing (only the non-ASCII letters survive); some reject non-ASCII characters ("Enter a valid name") → transliterate to ASCII.
 - **`ctrl+a` never works** in form fields (selects the page; new text is appended/overlapped). Clear with `focus()+select()` then real `Delete`, or native setter `''`, or `End` + repeated `BackSpace`.
 - **`computer.key` ignores `count`.** `{action:"key", text:"BackSpace", count:8}` presses once. Write N separate key actions inside `browser_batch`.
 - **Number-only fields** ("How many years…", many salary fields, even text-looking ones): digits only; currency/range go in a free-text field, else pick one number. Clear with `End` + one `BackSpace` per character (invalid number inputs report `value===''`).
@@ -101,7 +101,7 @@ Section = vendor name; BambooHR, Revolut and account walls → Hand off; Viterbi
   ```
   Click it, then re-read the line. **The form's list wins over the description's promise.**
 - **Verify before submit:** every text `value`, custom-select display, radio/checkbox, uploaded filename.
-- **Drafts:** Greenhouse/Ashby save nothing — reload wipes the form; fill and submit in one pass. Workday saves only on "Save and Continue". LinkedIn Easy Apply saves drafts.
+- **Drafts:** Greenhouse/Ashby save nothing — reload wipes the form; fill and submit in one pass. Workday saves only on "Save and Continue".
 - **Silent submit:** capture the error body before retrying.
   ```js
   window.__cap=[];

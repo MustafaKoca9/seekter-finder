@@ -17,3 +17,4 @@
 - Demographic blocks (ethnicity, gender, age range, veteran) are separate `surveysResponses[...]` checkboxes and are optional. Leave them.
 - **Traps:** Some tenants (e.g. FARFETCH, Deliverect) return "Page script returned empty result" for `find`/`read_page`/`form_input`/`file_upload` — no fix; fill via JS setter, human attaches CV.
 - **Submit:** scroll-back to form = empty required field. No network request on submit / `form.submit()` → "There was an error verifying your application" = bot layer → hand over.
+- **Every `urls[...]` field is validated as a URL, even when a tenant uses one for something else.** Measured 2 Oct (CoinMarketCap): the only salary box was a links field named `urls[Salary]` under a label asking for current and expected salary. Free text in it made the submit fail silently, with no error painted anywhere; emptying it let the same submit through to `/thanks`. Leave a misused URL field blank and put the answer in the tracker.

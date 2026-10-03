@@ -15,7 +15,7 @@
   - "Job details"/"Apply" tabs: a ref-clicked Send can bounce to Job details (values survive). Close banner → click "Apply" tab by coordinate (`/c/new`) → `End` → Send by coordinate.
   - Location lists may lack the home country → truthful region if present (e.g. "Europe") + state location in free text.
   - Knockout radios close the form — read before calling a match.
-- **Phone country picker carries the Turkish-spelling trap**, the same one Recruitee has: typing the English name jumps to neighbours ("Turk" → Turks & Caicos, Tuvalu, Uganda) because the row reads **Türkiye** with an umlaut and sorts just above them. The list is virtualized, so a DOM text search for it returns nothing until it is scrolled into view. Scroll the open dropdown up ~2 ticks, confirm by zoom, click by coordinate. Selecting it pre-fills the dial code; put the caret at the end and type `<PHONE_LOCAL>`, which the widget then renders in spaced national format.
+- **Phone country picker carries the native-spelling trap**, the same one Recruitee has: when a country's row uses its native name with a non-ASCII letter, typing the English name jumps to the neighbours it sorts next to. The list is virtualized, so a DOM text search for it returns nothing until it is scrolled into view. Scroll the open dropdown up ~2 ticks, confirm by zoom, click by coordinate. Selecting it pre-fills the dial code; put the caret at the end and type `<PHONE_LOCAL>`, which the widget then renders in spaced national format.
 - **File upload:** `find` → `file_upload` (S3 presigned via `/uploads/presigned_data`).
 - **Submit:** Success = `/applied`, "All done! Your application has been successfully submitted!". Form reappearing empty, "Content missing", or a 503 may still mean success → reload `/applications/new`; "You already applied for this job" confirms. Never submit three times.
 
@@ -37,3 +37,4 @@
 - **A post-submit re-render can look exactly like a validation failure**: the form comes back empty with
   a red required-consent message. Before refilling, reload the posting and look for "You already applied
   for this job", which is Teamtailor's own applied marker.
+- **A required "Address" can be a geocoder, `candidate[location][query]`, placeholder "Start typing your address".** A native setter on it leaves it empty and submit fails with "Address can't be blank" and no other sign. Click it, type the city, wait for the suggestion list, click "<CITY>, <COUNTRY>". Measured 2 Oct (C Teleport).

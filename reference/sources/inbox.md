@@ -13,6 +13,10 @@ None of this makes an approach fraudulent, and small companies do source quietly
 
 Measured 27 Sept on one such approach: real company, the description of it in the mail accurate, `/careers` redirected to the homepage, no board on any of the five ATSs, and their Recruitee API returned **0 offers**. Log it as `pending` against the company so dedup catches them later.
 
+## LinkedIn job-alert emails
+
+These are a source, not replies: the only way LinkedIn reaches the run (`linkedin.md`). Read the cards from the mail body (company, title, location, and the job id from the `/jobs/view/<id>` href in the HTML) and **never click a link in the mail**. A digest shows about six of its matches; the rest are only on LinkedIn. Then resolve each one to the employer's own posting as `linkedin.md` describes. The probe list in the section above is the same one.
+
 ## Reply analysis (Outlook web) and rejection regex
 
 **Lessons**

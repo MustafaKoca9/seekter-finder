@@ -5,7 +5,7 @@ Two surfaces, one ATS. The classic form is ordinary DOM; the `oneclick-ui` flow 
 ## The classic form
 
 - **URLs:** `jobs.smartrecruiters.com/<Company>`. "I'm interested" leads to `/oneclick-ui/company/<Co>/publication/<uuid>`, then a second `/screening` page of employer questions.
-- **The phone widget guesses the country from the job, not the candidate.** It set Germany +49 for a Munich role even though the city field said Istanbul. Writing the full E.164 number into the field corrects the flag. Check it: the number is silently wrong otherwise.
+- **The phone widget guesses the country from the job, not the candidate.** It set Germany +49 for a Munich role even though the city field held the candidate's own city abroad. Writing the full E.164 number into the field corrects the flag. Check it: the number is silently wrong otherwise.
 - **Set values:** If `document.querySelectorAll('input')` returns ~1 result, fields are in shadow DOM: `read_page` won't see them, coordinate click + `type` works. Textarea can't be cleared by keys (text goes mid-string) — get it right first time or reset with:
   ```js
   const s=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set;
@@ -33,7 +33,7 @@ Two surfaces, one ATS. The classic form is ordinary DOM; the `oneclick-ui` flow 
 
 - The "I'm interested" button on a job page lands here; `/apply` on the job URL does not.
 - **The whole form is shadow DOM** (39 shadow roots measured 24 Sept, IFS), so `document.querySelectorAll('input,textarea')` returns **one** element and it is the **profile-image** slot, not the resume. Handing the CV to that slot is the documented avatar trap. Fill everything by coordinate click plus typing instead.
-- The phone country picker has its own search box and uses the English name, so "Turk" finds "Turkey +90" directly. The City field is a geocoder: type, wait, pick "Istanbul, Türkiye".
+- The phone country picker has its own search box and uses the English name, so the first letters of the country find it directly. The City field is a geocoder: type, wait, pick "<CITY>, <COUNTRY>".
 
 **The flow looks unreachable and is not.** The page nests ~1,800 shadow roots and `find`, `read_page` and `document.querySelectorAll` all return nothing, which is what made it look like a wall. A recursive walk reaches everything:
 
