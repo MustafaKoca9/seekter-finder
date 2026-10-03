@@ -45,8 +45,6 @@ Files live in `profile/documents/` (not committed).
 | `profile/documents/{{CV_ALT}}` | CV for {{ALT_ROLE_TYPE}} roles (optional) |
 | `profile/documents/{{PORTFOLIO_PDF}}` | When a form demands a portfolio **file** (optional) |
 
-LinkedIn Easy Apply CV card name stem: `{{EASY_APPLY_CV_STEM}}`.
-
 ---
 
 ## 3. Standard answers
@@ -190,8 +188,9 @@ Applies to cover letters, free-text answers and messages to employers.
 
 Machine-readable queries live in `profile/search.json`. Human notes:
 
-- LinkedIn home geoId: `{{HOME_GEO_ID}}`
-- Separate searches needed for: {{SEPARATE_GEOS}} (EEA excludes UK, Switzerland and Turkey)
+- LinkedIn alerts (created by the candidate, Email delivery): see `linkedin.searches` in `profile/search.json`
+- LinkedIn mode: `{{LINKEDIN_MODE}}` (`email` default; `read` only with the candidate's own answer quoted here: {{LINKEDIN_READ_CONSENT}})
+- Separate alerts needed for: {{SEPARATE_GEOS}} (EEA excludes UK, Switzerland and Turkey)
 - Boards and cadence: {{BOARDS}}
 
 ---

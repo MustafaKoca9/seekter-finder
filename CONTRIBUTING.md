@@ -93,7 +93,7 @@ claude                                  # open Claude Code in the repo
 /seekter-run                            # the daily run
 ```
 
-You need [Claude Code](https://docs.claude.com/en/docs/claude-code), the Claude in Chrome extension logged in to LinkedIn, Python 3.9+ and `curl`. There is nothing to install and no build step.
+You need [Claude Code](https://docs.claude.com/en/docs/claude-code), the Claude in Chrome extension, Python 3.9+ and `curl`. There is nothing to install and no build step.
 
 ## Tests
 

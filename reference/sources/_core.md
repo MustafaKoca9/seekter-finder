@@ -1,19 +1,20 @@
 # Sources: core
 
-Reference for steps 1-5 of the run. Everything here is **person- and role-independent**: how each source behaves, what its filters do, and which of its labels lie. Queries, titles, geoIds, board names and cadences belong to one candidate and live in `profile/search.json` and `profile/profile.md`.
+Reference for the source steps of the run. Everything here is **person- and role-independent**: how each source behaves, what its filters do, and which of its labels lie. Queries, titles, geoIds, board names and cadences belong to one candidate and live in `profile/search.json` and `profile/profile.md`.
 
 Where a measurement needed a concrete query to be verifiable, the number is kept and the query is described by shape ("a two-word title", "one discipline category"). Measurements taken for one discipline say so.
 
 ## How this folder is read
 
-One file per source. **Read this file plus `linkedin.md` and `freehire.md` on every run**, because those are steps 1-4 and they are not optional. Read a board's file only when that board is in play for the run, which `profile/search.json` decides. A source with no file here has never been measured; add one rather than growing another.
+One file per source. **Read this file plus `your-links.md`, `freehire.md` and `linkedin.md` on every run**, because those are steps 0-2 and they are not optional. `linkedin.md` also holds the LinkedIn rule: Easy Apply and any action never, reading only when the user has opted in, and within limits. Read a board's file only when that board is in play for the run, which `profile/search.json` decides. A source with no file here has never been measured; add one rather than growing another.
 
 **When a new source is measured, it gets its own file and a row in the table below.** When a lesson is *not* about one source's own mechanics, it belongs in this file, not in a source file, or it will never be read again.
 
 | Source | File | When |
 |---|---|---|
-| LinkedIn (alerts, notifications, searches, tracker) | `linkedin.md` | every run, steps 2-4 |
+| Links the user brings (chat, `profile/links.txt`) | `your-links.md` | every run, step 0 |
 | freehire.me API | `freehire.md` | every run, step 1 |
+| LinkedIn: alert emails; searches and notifications only in `read` mode | `linkedin.md` | every run, step 2 |
 | Jobicy API | `jobicy.md` | with step 1, one curl per tag |
 | jobs.intodesignsystems.com | `intodesignsystems.md` | step 5, at the profile's cadence |
 | designsystems.jobs | `designsystems-jobs.md` | step 5 |
@@ -78,17 +79,9 @@ That shape exists to be impossible to match except by the person already in the 
 
 Lesson, and it is the transferable one: **generic remote boards are US-heavy and stale, while one good niche board for the candidate's discipline outperforms all of them.** After this measurement the board step shrank to one niche board daily, one generic board twice a week, and one discovery-only board monthly. Find the equivalent three for the candidate's field rather than adding more generic boards.
 
-## JS execution pitfalls (LinkedIn and general)
-- **The async result gets lost:** an `async` IIFE comes back as `{}`. Do the work, write the result to `window.X`, and read it in a **second synchronous call**. That's why `SEARCH` is fire-and-store.
-- **At most 3 searches per JS call.** CDP times out at 45 s, so plan 2–3 per call. Long `setTimeout` or scroll loops hit the same 45 s timeout, so do waits as separate `computer wait` steps.
+## JS execution pitfalls
+- **The async result gets lost:** an `async` IIFE comes back as `{}`. Do the work, write the result to `window.X`, and read it in a **second synchronous call**. 
+- **At most about 3 network calls per JS call.** CDP times out at 45 s. Long `setTimeout` or scroll loops hit the same 45 s timeout, so do waits as separate `computer wait` steps.
 - Output is cut off at about 1000 characters; slice large outputs.
 - REPL semantics: no `return`, the last expression is the result.
-- **CSRF** = `document.cookie.match(/JSESSIONID="?([^";]+)"?/)`.
-- **Parentheses in a keyword silently return 0.** The Voyager `query=` value is a DSL whose own grammar is built from `(` and `)`, and `encodeURIComponent` does **not** escape those two characters. A keyword the user typed with brackets, e.g. a title plus a parenthesised specialism, corrupts the query and comes back empty, which reads as "no such jobs". Escape them to `%28`/`%29` by hand, or strip them: they add nothing, since LinkedIn treats the query as loose anyway.
-- **DOM scraping doesn't work.** The list is virtualized: 18 of 25 off-screen `li[data-occludable-job-id]` cards are empty. The list container is found with the helper below. `LIST().scrollTop` works, but the list still doesn't render every step. **The API is always better**.
-```js
-window.LIST=function(){return [...document.querySelectorAll('div')].filter(function(e){
-  return e.scrollHeight>e.clientHeight+200&&e.clientHeight>300&&
-         !/job-details/.test((e.className||'').toString());});};
-```
 - Bulk setter or delete loops can be blocked by the safety classifier ("[Real-World Transactions]", "Blocked by classifier"). Use single `form_input` + ref calls or real clicks.

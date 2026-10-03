@@ -1,179 +1,130 @@
 # LinkedIn
 
-## Job alerts
-- **Where the list lives:** linkedin.com/jobs → left menu "Preferences" → "Job alerts" → `linkedin.com/jobs/jam?viewType=JOB_ALERTS`, then "Show 5 more". `/jobs/job-alerts/` is not the list.
-- **Editing:** the pencil only offers frequency (Daily/Weekly), notification type (Email and notification / Email / Notification) and "Delete job alert". **Keyword and location can't be edited**, so a query change means delete and recreate from the search page.
-- **Creating:** open the search URL, then click the "Set alert" toggle at the top right (`input[type=checkbox]`, `id^=adToggle`, 43×27 CSS px). **The first click after navigation is often swallowed** because the sticky header re-renders. Click, zoom to check, and click again if it's still off. On shows the text **"Alert on"** with a green pill; off shows **"Set alert"** with a navy pill and the knob on the left.
-- **Deleting:** pencil → "Delete job alert" → confirm "Delete". The confirm button's y position shifts about 26 frame px with text length, so take a screenshot before each delete. **Bulk JS delete loops get "Blocked by classifier"**; do them one at a time with real clicks.
-- **Quoted vs unquoted, measured over 7 days.** The narrower and more compound the title, the more the quotes cost; a broad one-word title loses nothing, which is why the damage goes unnoticed:
+## The rule, and why
 
-| Query shape | Quoted | Unquoted |
+LinkedIn's help page on prohibited software says it does not permit "browser plug-ins, or browser extensions that scrape, modify the appearance of, or automate activity on LinkedIn's website", and that members using them "risk having their accounts restricted or shut down" ([help article](https://www.linkedin.com/help/linkedin/answer/a1341387), [User Agreement §8.2](https://www.linkedin.com/legal/user-agreement)). Seekter drives the browser through an extension, so anything it does on LinkedIn falls inside that sentence. The risk is to the user's account, not to one application. The User Agreement also rules out the obvious workaround: one account per person, and none for someone LinkedIn has already restricted.
+
+The useful work is filling forms, not finding postings, so Seekter treats LinkedIn as a place to **read from at most**, never to act on.
+
+**Never, in any mode, even when asked:**
+- fill or submit **Easy Apply**, or open its modal;
+- any action that writes: apply, save, dismiss, follow, connect, message, react, create or edit an alert, resume or discard a draft.
+
+**What it may do depends on `linkedin.mode` in `profile/search.json`:**
+
+| Mode | LinkedIn pages and APIs | Where LinkedIn postings come from |
 |---|---|---|
-| Two-word niche title · EEA · remote | **0** | 25 |
-| Two-word niche title · Worldwide · remote | 7 | 25 |
-| Title with a slash variant · EEA · remote | 13 | 25 |
-| Common two-word title · EEA · remote | 25 | 25 |
+| `email` (**default**) | Never opened, never called, not even with `curl` | Job-alert emails in the inbox, plus links the user brings (`your-links.md`) |
+| `read` (opt-in) | Read only, within the limits below | All of the above, plus searches, the notification feed and job details |
 
-- **Real miss rate:** running the old quoted alert queries (257 jobs) against 13 jobs actually applied to via LinkedIn gave **3/13 caught, a 77% miss rate**.
-- **Root causes** (generic lessons):
-  - Quotes.
-  - A whole title family missing from the alert set. List the candidate's titles first, then check every alert covers one.
-  - **LinkedIn does not stem or merge title variants.** A slash variant and its plain form don't match each other, and neither matches the reversed order. Each variant the candidate's field uses needs its own alert.
-  - **EEA (`91000002`) excludes the UK, Switzerland and every non-EEA European country**, so those need separate alerts and searches.
-  - Seniority filters pull in the level above the one you want.
-  - **The Remote filter hides hybrid and on-site roles** in target countries.
-  - Noise titles: another industry using the same words (see "Title collisions" in `/seekter-run` §2.3).
-- **Unquoted breadth:** adding words doesn't narrow results (a two-word title Worldwide remote = 1,579; the same title plus a third word = 1,527). LinkedIn treats an unquoted query as loose, OR-like and relevance-sorted. **Result count says nothing about alert quality, so filter by title**.
-- **Notification type:** keep very broad alerts (thousands of results) as notification-only so they don't flood the inbox; put narrow ones on email plus notification.
-- **Small markets:** search the **broadest single word** of the candidate's discipline, not their exact title. Measured in a small home market: the two-word title missed two senior roles that the one-word search found, because local postings use local title conventions. The same holds on Glassdoor.
-- **Change policy:** originally "don't change alerts yourself, report it". Alerts were later rebuilt with the user's explicit approval. Don't delete alerts the user deliberately created.
-- **Job preferences ("Open to work")** drive a separate feed. Max 5 titles. **The title field is a closed taxonomy, not free text**, and a specialised or hyphenated title is often absent from it — the offered completions can even belong to a different industry. Pick the nearest standard title and record the substitution in the profile, because it is not what the candidate calls themselves. Set start date to "Immediately, I am actively applying" for recruiter visibility. Title combobox pitfalls: the frame width shifts and a click lands on the wrong option, so use `find` plus ref. `ctrl+a` doesn't select, so use triple_click. To reopen the list: click, Backspace, retype the last letter.
+`read` is only ever switched on by the user, after `/seekter-init` (or a chat request) has told them in plain words that it is against LinkedIn's terms and that the risk to their account is theirs. Record their answer, quoted, in the profile. A run never switches it on by itself.
 
-## Notification ID harvesting (`originToLandingJobPostings`)
-- URL: `https://www.linkedin.com/notifications/?filter=job_alerts`. The 19 Sept entry writes `?filter=job_alert`. Switch to the **Jobs** filter.
-- "See N jobs similar to…" and alert cards link to search URLs whose `originToLandingJobPostings=` parameter is a **comma-separated list of job IDs**. Take the IDs from there instead of scraping.
-- Harvest script (scroll down first):
+## Mode `email`: alert emails
+
+The user's own job alerts, delivered **by email**, arrive in the inbox without anyone touching LinkedIn. Seekter reads the mail, not the site.
+
+1. **Read the alert mails** with the method in `inbox.md`. From each card take the company, the title, the location line and the job id (the number in the `/jobs/view/<id>` href, read from the mail's HTML, never by opening the link).
+2. **Dedup on the id first:** `python3 scripts/seekter.py check "https://www.linkedin.com/jobs/view/<id>/" --company "<company>"`. Writing the URL as a string is how `check` keys it (`linkedin:<id>`); it is not opened. A bare number is only normalised by `check-many`, not by `check`, and passes as new. Most records are keyed on the employer's apply URL, so the id check is the cheap first filter and step 4's check on the apply URL is the real one.
+3. **Resolve the employer's own posting off LinkedIn.** Probe the public board APIs, matching the title:
+   - `boards-api.greenhouse.io/v1/boards/<co>/jobs`
+   - `api.ashbyhq.com/posting-api/job-board/<co>`
+   - `api.lever.co/v0/postings/<co>?mode=json`
+   - `POST apply.workable.com/api/v3/accounts/<co>/jobs`
+   - the company's own `/careers` page, or a web search for `"<title>" "<company>"`.
+
+   The slug is usually the company name lower-cased, with or without hyphens; try two or three spellings before giving up.
+4. **Found** → an ordinary candidate from here: dedup again on the apply URL, filter (`/seekter-run` §2), fill. Put the LinkedIn id in `--notes` so a later alert for the same job dedups.
+5. **Not found, or Easy Apply** → the report's **"On LinkedIn, yours to send"** list with the LinkedIn URL, and `pending` in the tracker.
+
+**A digest mail is a sample, not the list.** Measured 4 Oct: a mail headed "30+ new jobs match your preferences" carried 6 job cards and a "See all jobs" link. The other 24 are only on LinkedIn. Narrow alerts that match a handful of postings a day lose almost nothing to this cap; broad ones lose most of their matches. In `email` mode that is the main lever, and it is the user's to pull (next section).
+
+## Setting up the alerts (the user does this, on LinkedIn)
+
+Seekter cannot create or edit alerts. It tells the user what to set up: one alert per row of `linkedin.searches`, delivered by **Email**, to the address the inbox step reads. What was measured about alert quality:
+
+- **No quotes.** Measured over 7 days:
+
+  | Query shape | Quoted | Unquoted |
+  |---|---|---|
+  | Two-word niche title · EEA · remote | **0** | 25 |
+  | Two-word niche title · Worldwide · remote | 7 | 25 |
+  | Title with a slash variant · EEA · remote | 13 | 25 |
+  | Common two-word title · EEA · remote | 25 | 25 |
+
+- **LinkedIn does not stem or merge title variants.** Each variant the candidate's field uses needs its own alert.
+- **EEA excludes the UK, Switzerland and every non-EEA European country.**
+- **The Remote filter hides hybrid and on-site roles**, so a relocation geography needs a second alert without it.
+- **Small markets:** alert on the broadest single word of the discipline; local postings use local title conventions.
+- **Narrow beats broad** because of the six-card cap above. Prefer several narrow alerts to one broad one.
+- **Job preferences ("Open to work") titles are a closed taxonomy**, max 5. Pick the nearest standard title and note the substitution in the profile.
+
+## Mode `read`: limits
+
+Detection comes from volume and rhythm, so the limits are the point of this mode. Defaults live in `linkedin.read_limits` in `profile/search.json`:
+
+| Limit | Default | Meaning |
+|---|---|---|
+| `searches_per_run` | 15 | Search requests per run, pages included. Rows beyond it rotate: start the next run where this one stopped, and keep the index in `runs/linkedin-state.json` |
+| `details_per_run` | 60 | Job detail requests per run, job pages opened in the browser included. Fetch details only for title matches |
+| `min_gap_seconds` | 3 | Pause between any two LinkedIn requests. Requests run one after another, never in parallel |
+| notification feed | once per run | One page load, one harvest |
+
+**Stop signals.** Any of these ends LinkedIn reading for the run at once, before another request:
+- an HTTP 429 or 999, or a 403 on an endpoint that worked earlier in the run;
+- a redirect to `/checkpoint/`, `/authwall`, `/uas/login` or a CAPTCHA page;
+- page text about restriction or unusual activity ("restricted", "unusual activity", "kısıtlandı", "olağan dışı").
+
+Then set `linkedin.mode` back to `email` in `profile/search.json`, say so at the top of the report, and carry on with the other sources. Switching it back to `read` is the user's call.
+
+## Mode `read`: methods
+
+Requests run in the page context of an open `linkedin.com` tab. `window.CSRF = document.cookie.match(/JSESSIONID="?([^";]+)"?/)[1]`. Every fetch is followed by `await new Promise(r=>setTimeout(r, gap*1000))`; at the default gap, eight requests fit inside one JS call's 45 s budget.
+
+**Searches** (Voyager REST, relevance order):
+```js
+window.R=window.R||{};
+window.SEARCH=async function(key,kw,geo,remote,tpr,start){
+  // Relevance order. Never add sortBy:List(DD): see "sortBy" below.
+  var f=[];if(remote)f.push('workplaceType:List(2)');if(tpr)f.push('timePostedRange:List('+tpr+')');
+  var q='(origin:JOB_SEARCH_PAGE_OTHER_ENTRY,keywords:'+encodeURIComponent(kw).replace(/\(/g,'%28').replace(/\)/g,'%29')+
+        ',locationUnion:(geoId:'+geo+'),selectedFilters:('+f.join(',')+'),spellCorrectionEnabled:true)';
+  var u='/voyager/api/voyagerJobsDashJobCards?decorationId=com.linkedin.voyager.dash.deco.jobs.search.JobSearchCardsCollection-220'+
+        '&count=25&q=jobSearch&query='+q+'&start='+(start||0);
+  var r=await fetch(u,{headers:{'csrf-token':window.CSRF,'accept':'application/vnd.linkedin.normalized+json+2.1'}});
+  window.R[key]={status:r.status,j:r.ok?await r.json():null};return r.status;};
+```
+- In `j.included`, records whose `entityUrn` is `...jobPosting:<id>` carry `title`: id and title in one request. Filter by title, then fetch details only for candidates.
+- `count` max 25; `start=0/25/50`. `tpr`: `r86400`, `r259200`, `r604800`, `r2592000`. `workplaceType:List(2)` = remote.
+- **Parentheses in a keyword silently return 0** unless escaped: `encodeURIComponent` leaves `(` and `)` alone and the query DSL is built from them. The `replace` calls above handle it.
+- **Relevance, never `sortBy:List(DD)`.** Date order on a loose multi-word query ranks by posting time across everything matching any word: measured 23 Sept, relevance 25/25 on-discipline, date order 1/25. Use `timePostedRange` for freshness.
+- **Don't filter on Easy Apply (`f_AL`).** It breaks keyword matching. Tell Easy Apply from `applyMethod` instead.
+- **geoIds:** `91000002` EEA · `92000000` Worldwide · `102105699` TR · `102890719` NL · `101282230` DE · `104738515` IE · `105646813` ES · `103350119` IT · `105072130` PL · `105015875` FR · `100364837` PT · `101165590` UK. EEA doesn't cover the UK or Switzerland. A new one can be read out of a search URL the user sends.
+- **Country geo + remote trap:** remote plus a single-country geo mostly returns global roles that accept that country, not local companies.
+- If the endpoint dies, stop and report. Finding a replacement means watching the network panel while paging through a search, which is a job for a session the user is watching, not a run.
+
+**Notification feed** (once per run): open `https://www.linkedin.com/notifications/?filter=jobs_all`, check the highlighted pill reads Jobs (`?filter=job_alerts` opens on All and gave 20 ids against 48), scroll once, then harvest without clicking anything:
 ```js
 const ids=new Set();
 document.querySelectorAll('a[href*="originToLandingJobPostings"]').forEach(a=>{
- const u=new URL(a.href,location.origin);const p=u.searchParams.get('originToLandingJobPostings');
+ const p=new URL(a.href,location.origin).searchParams.get('originToLandingJobPostings');
  if(p)p.split(',').forEach(x=>ids.add(decodeURIComponent(x).trim()));});
-document.querySelectorAll('a[href*="currentJobId="]').forEach(a=>{const u=new URL(a.href,location.origin);const c=u.searchParams.get('currentJobId');if(c)ids.add(c);});
-document.querySelectorAll('a[href*="/jobs/view/"]').forEach(a=>{const m=a.href.match(/\/jobs\/view\/(\d+)/);if(m)ids.add(m);});
+document.querySelectorAll('a[href*="/jobs/view/"]').forEach(a=>{const m=a.href.match(/\/jobs\/view\/(\d+)/);if(m)ids.add(m[1]);});
 JSON.stringify([...ids])
 ```
-- Feed the IDs to the detail harvest by hand (`const ids=['4441616273','4441603770',...]`). In one call you get title, location, apply URL, `workRemoteAllowed`, `closed` and the description.
-- `companyDetails` sometimes returns `?` for the company. Identify it from the description's first sentence instead.
-- Also scan `/jobs/job-alerts/` (alerts) and merge the IDs. One 11 Sept round: 42 raw → 39 unique → 7 applications.
-- **Overlap measured a seventh time (2 Oct): 13 of 63.** The notification harvest gave 63 ids; the 43 searches gave 352 unique ids and 209 title matches. **50 of the 63 notification ids appeared nowhere in the search set.** Seven measurements now, and the answer has not moved once.
-- **Overlap measured a sixth time (1 Oct): 7 of 44.** The notification harvest gave 44 ids; the 43 searches gave 344 unique ids and 213 title matches, and only 7 of the notification ids appeared anywhere in that set. Six measurements now, and the answer has not moved: the two channels do not substitute for each other in either direction.
-- **Overlap measured a fifth time (25 Sept): 2.** The notification harvest gave 57 ids and about 40 title matches; the 40 searches gave 338 unique ids and 190 title matches, of which **188 were absent from the notification harvest**. Running tally of searches-not-in-notifications: 13 of 24, then 53 of 55, then 59 of 59, then 121 of 132, now **188 of 190**. Five measurements, same answer every time.
-- **Overlap with the searches, measured a fourth time (24 Sept): 11.** The notification harvest gave 47 ids / 35 title matches; the 16 searches gave 208 unique ids / 132 title matches, of which **121 were absent from the notification harvest**. Running totals for the overlap between the two channels on the same day: 13 of 24 missing (one direction), then 53 of 55 missing, then 59 of 59 missing, now 121 of 132 missing. The channels do not substitute for each other in either direction.
-- **`closed` from the detail endpoint is not a liveness check.** Measured 24 Sept: a posting returned `closed=false` while its job page read "Not currently accepting applications", 3 hours after being posted, with 9 applicants. Fresh postings can shut within hours, so for anything you intend to apply to, the job page or the ATS is the only status worth trusting.
-- Yield is noisy. One measured round: 36 IDs → 9 already applied, 4 title collisions from other industries, 2 blacklisted, 2 sensitive sector, 1 aggregator, 1 fake location → 9 real candidates. Always bulk-fetch; never open jobs one by one.
-- `SEMANTIC_SEARCH_JOB_ALERT` links carry geoId and keyword as well.
+The feed and the searches are different channels: on seven days between 22 Sept and 2 Oct, most notification ids appeared nowhere in that day's search results (50 of 63 on 2 Oct). The feed is cheap, one page; keep it.
 
-## Search URL (UI) and parameters
-```
-https://www.linkedin.com/jobs/search/?keywords=<term>&f_WT=2&f_TPR=r86400&geoId=<geoId>
-```
-- `f_WT=2` = remote.
-- `f_TPR=r86400` (24 h) / `r259200` (3 days) / `r604800` (7 days) / `r2592000` (30 days).
-- `f_E=4,5,6` = mid-senior and above.
-- `sortBy=DD` = newest first. **Do not use it.** It is an ordering, not a filter, and on a loose multi-word query it ranks by posting time across everything matching any single word, which floods the result set with other industries. Use `f_TPR` for freshness and leave the ordering at relevance. Measured 23 Sept, one query, EEA, 3-day window: relevance 25/25 on-discipline, `sortBy=DD` 1/25. The same trap as `sort=posted_at` on the freehire API, documented there since the first week and never transferred here.
-- Pagination: `&start=25,50,75...`.
-- **Don't use `f_AL=true` (Easy Apply filter).** It breaks keyword matching: with it on, a two-word title returned roles from unrelated disciplines. Detect Easy Apply from `applyMethod` instead: no `companyApplyUrl` means Easy Apply.
-- **geoIds** (extend as the candidate's geography needs; read a new one out of the URL after picking the location in the UI): `91000002` EEA · `92000000` Worldwide · `102105699` TR · `102890719` NL · `101282230` DE · `104738515` IE · `105646813` ES · `103350119` IT · `105072130` PL · `105015875` FR · `100364837` PT · `101165590` UK. EEA doesn't cover the UK or Switzerland, so search them separately.
-- **Country geo + remote filter trap:** remote plus a single-country geo mostly returns *global roles that accept that country*, not local companies. To see local-company jobs, drop the remote filter, grep descriptions for `uzaktan|remote` (local-language "remote"), then verify with `workRemoteAllowed`.
-- **Search-set size:** a set of quoted, narrowly-worded searches was superseded by 8 or more unquoted ones. Fewer, broader searches plus a title filter beat many narrow ones.
-
-## Voyager detail endpoint (bulk harvest, still working)
+**Job details:**
 ```js
-const csrf=document.cookie.match(/JSESSIONID="?([^";]+)"?/);
-const ids=[...document.querySelectorAll('li[data-occludable-job-id]')].map(li=>li.getAttribute('data-occludable-job-id'));
-window.__jobs=[];let out=[];
-for(const id of ids){try{
 const r=await fetch('/voyager/api/jobs/jobPostings/'+id+'?decorationId=com.linkedin.voyager.deco.jobs.web.shared.WebFullJobPosting-65',
-  {headers:{'csrf-token':csrf,'x-restli-protocol-version':'2.0.0'}});
-const d=await r.json();
-const am=JSON.stringify(d.applyMethod||{});
-let u=(am.match(/"companyApplyUrl":"([^"]+)"/)||[]);
-u=u?decodeURIComponent(u.replace(/\\u002F/g,'/')).split('?'):'EASY';
-let h='EASY';if(u!=='EASY'){try{h=new URL(u).hostname;}catch(e){h='?';}}
-window.__jobs.push({id,u,title:d.title,desc:(d.description&&d.description.text||'').replace(/\s+/g,' ')});
-out.push([id,d.title,d.formattedLocation,h].join(' :: '));
-}catch(e){out.push(id+' :: ERR');}}
-out.join('\n');
+  {headers:{'csrf-token':window.CSRF,'x-restli-protocol-version':'2.0.0'}});
+const j=await r.json();const d=j.data||j;   // the body is j, not j.data
+const am=d.applyMethod||{};
+const url=(am['com.linkedin.voyager.jobs.OffsiteApply']||{}).companyApplyUrl||'';   // empty = Easy Apply
 ```
-- **Print only the hostname.** Printing the full apply URL returns `[BLOCKED: Cookie/query string data]`, so keep full URLs in `window.__jobs`. `.split('?')` is required.
-- **Response body is `j`, not `j.data`.** Use `const j=await r.json(); const d=j.data||j;`. Writing `(await r.json()).data||{}` empties every record.
-- Parallel bulk fetch in batches of 8 into `window.__RES`, then filter.
-- ATS triage by hostname:
-  - Drivable: `jobs.ashbyhq.com`, `jobs.lever.co`, `jobs.eu.lever.co`, `job-boards.greenhouse.io`, `*.recruitee.com`, `apply.workable.com`.
-  - `*.myworkdayjobs.com` needs an account.
-  - `click.appcast.io`, `jsv3.recruitics.com` and `*.icims.com` are usually US.
-- Keyword scan on descriptions:
-```js
-window.__jobs.filter(j=>/sponsor|relocat|visa|EMEA|anywhere in the world|worldwide|EOR|contractor|B2B/i.test(j.desc))
-  .map(j=>j.id+' :: '+j.title).join('\n');
-```
+- Keep full URLs in `sessionStorage`, not `window` (lost on navigation) and not in printed output (`?`, `=` and `&` trigger `[BLOCKED: Cookie/query string data]`; print hostnames, or replace those characters).
+- `closed=false` is not a liveness check; a posting can stop accepting applications within hours. The employer's page decides.
+- `companyDetails` sometimes returns no name; take it from the description's first sentence.
 
-## Voyager search endpoint: current working REST version (16 Sept)
-```js
-window.SEARCH=function(key,kw,geo,remote,tpr,start){
-  // Relevance order. Never add sortBy:List(DD) here — see "sortBy=DD" above.
-  // Filters are joined, so no leading comma can sneak in when one is absent.
-  var f=[];
-  if(remote)f.push('workplaceType:List(2)');
-  if(tpr)f.push('timePostedRange:List('+tpr+')');
-  var q='(origin:JOB_SEARCH_PAGE_OTHER_ENTRY,keywords:'+encodeURIComponent(kw)+
-        ',locationUnion:(geoId:'+geo+'),selectedFilters:('+f.join(',')+
-        '),spellCorrectionEnabled:true)';
-  var u='https://www.linkedin.com/voyager/api/voyagerJobsDashJobCards'+
-        '?decorationId=com.linkedin.voyager.dash.deco.jobs.search.JobSearchCardsCollection-220'+
-        '&count=25&q=jobSearch&query='+q+'&start='+(start||0);
-  fetch(u,{headers:{'csrf-token':window.CSRF,
-    'accept':'application/vnd.linkedin.normalized+json+2.1'}})
-   .then(function(r){return r.json();}).then(function(j){window.R[key]=j;});
-  return 'fired';};
-```
-- The script assumes `window.CSRF` (from the JSESSIONID regex above) and `window.R={}` are set beforehand.
-- `count` max 25; paginate with `start=0/25/50`.
-- `tpr` values: `r86400`, `r259200`, `r604800`, `r2592000`. `workplaceType:List(2)` = remote.
-- Headers: `csrf-token`, plus `x-restli-protocol-version: 2.0.0` (in the 12 Sept version), plus `accept: application/vnd.linkedin.normalized+json+2.1`.
-- In `j.included`, records whose `entityUrn` is `...jobPosting:<id>` carry `title`, so **ID + title arrive in one request**. Filter by title, then fetch details only for candidates.
-- This decoration returns an empty `formattedLocation`. Get location from the detail endpoint (`WebFullJobPosting-65`).
-- **Finding a new queryId when one dies:** open `read_network_requests` on the search page and click "Next" pagination. The first page is server-rendered (SSR), so only the client-side pagination request shows up.
-- ⚠️ LinkedIn shows "We're gradually retiring classic job search starting in September", so this endpoint may also go.
-- The 12 Sept predecessor (for reference): `/voyager/api/voyagerJobsDashJobCards?decorationId=com.linkedin.voyager.dash.deco.jobs.search.JobSearchCardsCollection-224&count=25&q=jobSearch&query=(origin:JOB_SEARCH_PAGE_JOB_FILTER,keywords:<encoded>,locationUnion:(geoId:<geo>),selectedFilters:(workplaceType:List(2),timePostedRange:List(r604800)),spellCorrectionEnabled:true)&start=0`
+## Easy Apply
 
-## Job tracker and drafts
-- Drafts: `linkedin.com/jobs-tracker/?stage=draft`. Resume a draft via the job page's **"Continue"** button. The tracker's "Continue Application" link sometimes does nothing, so go straight to `linkedin.com/jobs/view/<id>`.
-- Two kinds of card:
-  - "Discard draft application and remove this job?" → Yes removes it.
-  - "Did you finish applying?" → **can't be removed.** "Yes" would be a false claim, "No" does nothing, and Delete/Archive don't work. Leave it.
-- The draft counter doesn't match the visible cards, so trust the list.
-- Save an Easy Apply you can't finish with Dismiss → **Save**; it becomes a draft.
-- LinkedIn's "Applied" mark (on cards and job pages) catches applications the user made by hand that aren't in the tracker. Check it too.
-- The same ATS job can appear under two LinkedIn titles, so compare the ATS UUID.
-
-## Easy Apply driver (single JS call)
-```js
-const CV='<CV_NAME>';   // file name stem of the CV to pick, from the profile
-function panel(){const t=[...document.querySelectorAll('button')].find(x=>x.offsetParent&&/^(Next|Review|Submit application)$/.test((x.innerText||'').trim()));if(!t)return null;let p=t;for(let i=0;i<10;i++){p=p.parentElement;if(p&&(p.innerText||'').length>120)break;}return p;}
-function pickCV(n){const t=[...document.querySelectorAll('*')].filter(e=>e.textContent.includes(n)&&e.children.length===0);if(!t)return 0;let c=t;for(let i=0;i<8;i++){c=c.parentElement;if(c.getAttribute('role')==='button')break;}c.click();return 1;}
-const b=[...document.querySelectorAll('button')].find(x=>/Easy Apply to this job/.test(x.getAttribute('aria-label')||''));
-if(!b)throw new Error('NOEASYAPPLY');
-b.click();await new Promise(r=>setTimeout(r,3500));
-let prev='',log=[];
-for(let i=0;i<12;i++){const p=panel();if(!p){log.push('NOPANEL');break;}
- const cur=(p.innerText.match(/^\d+\/\d+ pages/)||['']);const txt=p.innerText.replace(/\n{2,}/g,'\n').slice(0,700);
- if(/Select or upload a resume/.test(txt)){pickCV(CV);await new Promise(r=>setTimeout(r,1200));}
- if(cur&&cur===prev){log.push('STUCK:'+txt);break;}prev=cur;
- const nx=[...document.querySelectorAll('button')].find(x=>x.offsetParent&&/^(Next|Review)$/.test((x.innerText||'').trim()));
- if(!nx){const s=[...document.querySelectorAll('button')].find(x=>x.offsetParent&&(x.innerText||'').trim()==='Submit application');
-  if(s){s.click();await new Promise(r=>setTimeout(r,4500));}log.push('SUBMITTED:'+/Application submitted|application was sent/i.test(document.body.innerText));break;}
- log.push(cur);nx.click();await new Promise(r=>setTimeout(r,2600));}
-JSON.stringify(log)
-```
-Consent-checkbox add-on to put inside the loop (11 Sept):
-```js
-if(/privacy notice/i.test(txt)){const cb=[...document.querySelectorAll('input[type=checkbox]')].filter(e=>e.offsetParent||e.id);if(cb&&!cb.checked){const lb=[...document.querySelectorAll('label')].find(l=>l.getAttribute('for')===cb.id);if(lb)lb.click();await new Promise(r=>setTimeout(r,500));}}
-```
-Notes:
-- `STUCK:` means answer that page's questions, then re-run the driver.
-- The CV card is a `div[role=button]`.
-- Radios and checkboxes:
-  - Most reliable: a real click at the centre of `label[for=<radio id>]` (the radio itself is 0×0).
-  - Fallback: click the radio for focus, then press `space`.
-  - `label.click()` followed by `input.click()` sometimes works. Always verify `.checked`.
-- Native `<select>`s: native setter plus `change`.
-- City typeahead: click the field via ref → type → wait 3 s → click the suggestion **by coordinate**. Return doesn't work. The location is often **pre-filled but looks empty**, and typing appends to it. Clear with End + Backspaces first.
-- A field that never validates may be a hidden **date picker** (calendar icon). DOM order ≠ visual order and `label[for]` mapping can mislead, so **sort fields by `getBoundingClientRect().y`**.
-- Some fields swallow spaces.
-- **"How many years" and salary fields are number-only.** Text returns "Invalid input". Clear with `End` + many `BackSpace` presses (triple_click, ctrl+a and Delete don't work).
-- Easy Apply can wrap Greenhouse questions; a consent may be a `select`, not a checkbox.
-- Use `browser_batch` so click and type happen in one round trip. Separate calls let the modal shift.
-- **On the Additional Questions page a click by `ref` does not focus the input, and the typed text is dropped silently.** Measured 30 Sept on a 4-page Easy Apply with two mandatory questions: `find` returned the right element, `computer left_click` on that ref reported success, `type` reported success, and both fields still read `0/20 characters` with `value === ''`. There is no error and no visual cue; the only tell is reading `.value` back. A **coordinate click** on the same field, from a fresh screenshot, worked first time for both. So on this page: screenshot, click by coordinate, type, then verify `.value` before pressing Review.
-- Closing the modal asks "Save this application?". Choose `Discard` for jobs that don't fit.
-- Cost is about 6 tool calls per application, with no upload and no CAPTCHA.
+Listed, never filled, in both modes. The report gives each one's LinkedIn URL and the CV to pick, and the user sends them.

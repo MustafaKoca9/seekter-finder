@@ -25,7 +25,7 @@ it. One file per vendor makes that impossible to write, because there is nowhere
 | Indeed SmartApply, which Glassdoor Easy Apply hands off to | `indeed-smartapply.md` |
 | join.com | `join-com.md` |
 | Lever | `lever.md` |
-| LinkedIn Easy Apply | `linkedin-easy-apply.md` |
+| LinkedIn Easy Apply (not automated, list for the user) | `linkedin-easy-apply.md` |
 | One-off and unbranded forms | `other-forms.md` |
 | Personio | `personio.md` |
 | Pinpoint | `pinpoint.md` |
@@ -49,7 +49,7 @@ Section = vendor name; BambooHR, Revolut and account walls → Hand off; Viterbi
 |---|---|
 | `job-boards.greenhouse.io/<co>/jobs/<id>`, `job-boards.eu.greenhouse.io/...`, `grnh.se/...`, `.../embed/job_app?for=<co>&token=<id>`, iframe with `greenhouse` in `src` | Greenhouse |
 | `jobs.ashbyhq.com/<co>/<uuid>` (or company domain with Ashby form) | Ashby |
-| `linkedin.com/jobs/view/<id>` with "Easy Apply" | LinkedIn Easy Apply |
+| any `linkedin.com` job URL | Not a form. In `read` mode read its details for the employer's apply URL; in `email` mode resolve it off LinkedIn (`reference/sources/linkedin.md`). Easy Apply → the user's list |
 | `*.myworkdayjobs.com` | Workday |
 | `jobs.lever.co/<co>/<id>`, `jobs.eu.lever.co/...` | Lever |
 | company careers domain with `/c/new`, `/applications/new`, `/applied` | Teamtailor |
@@ -101,7 +101,7 @@ Section = vendor name; BambooHR, Revolut and account walls → Hand off; Viterbi
   ```
   Click it, then re-read the line. **The form's list wins over the description's promise.**
 - **Verify before submit:** every text `value`, custom-select display, radio/checkbox, uploaded filename.
-- **Drafts:** Greenhouse/Ashby save nothing — reload wipes the form; fill and submit in one pass. Workday saves only on "Save and Continue". LinkedIn Easy Apply saves drafts.
+- **Drafts:** Greenhouse/Ashby save nothing — reload wipes the form; fill and submit in one pass. Workday saves only on "Save and Continue".
 - **Silent submit:** capture the error body before retrying.
   ```js
   window.__cap=[];
