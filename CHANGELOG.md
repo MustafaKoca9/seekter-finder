@@ -76,8 +76,8 @@ sources has been quietly doing nothing for you, and that is what this fixes.
 ### LinkedIn Easy Apply never ran if your LinkedIn is not in English
 
 The Easy Apply driver matched on the English button names: "Easy Apply", "Next",
-"Review", "Submit application". On a Turkish account those read "Kolay Başvuru",
-"İleri", "İncele" and "Başvuruyu gönder", and every check failed.
+"Review", "Submit application". On an account set to another
+interface language those labels are translated, and every check failed.
 
 It fails silently, which is what makes it expensive. There is no error. The
 detection just reports that a posting has no Easy Apply button, which reads

@@ -192,7 +192,7 @@ Machine-readable queries live in `profile/search.json`. Human notes:
 
 - LinkedIn alerts (created by the candidate, Email delivery): see `linkedin.searches` in `profile/search.json`
 - LinkedIn mode: `{{LINKEDIN_MODE}}` (`email` default; `read` only with the candidate's own answer quoted here: {{LINKEDIN_READ_CONSENT}})
-- Separate alerts needed for: {{SEPARATE_GEOS}} (EEA excludes UK, Switzerland and Turkey)
+- Separate alerts needed for: {{SEPARATE_GEOS}} (EEA excludes the UK, Switzerland and every non-EEA European country)
 - Boards and cadence: {{BOARDS}}
 
 ---

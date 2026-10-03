@@ -113,17 +113,17 @@ class NormaliseTests(unittest.TestCase):
     def test_slug_folds_letters_that_nfkd_alone_would_delete(self):
         # NFKD only folds a letter that decomposes into base + combining mark.
         # A letter that is its own base character gets deleted instead, so the
-        # dotless ı disappeared: "Tasarım Atölyesi" became "tasarm-atolyesi".
-        self.assertEqual(sk.slug("Tasarım Atölyesi"), "tasarim-atolyesi")
-        self.assertEqual(sk.slug("İstanbul Ürün"), "istanbul-urun")
+        # dotless ı disappeared: "Desıgn Ateliér" became "desgn-atelier".
+        self.assertEqual(sk.slug("Desıgn Ateliér"), "design-atelier")
+        self.assertEqual(sk.slug("İnfo Über"), "info-uber")
         for word, want in [("Łódź", "lodz"), ("Ørsted", "orsted"), ("Straße", "strasse"),
                            ("Æther", "aether"), ("Đuro", "duro")]:
             self.assertEqual(sk.slug(word), want, word)
 
     def test_slug_does_not_fold_two_different_employers_onto_one_string(self):
         # The same-company check in `check` compares slugs, so a deletion here
-        # is not only cosmetic: before the fix both of these were "isk".
-        self.assertNotEqual(sk.slug("Işık"), sk.slug("Isk"))
+        # is not only cosmetic: before the fix both of these were "lght".
+        self.assertNotEqual(sk.slug("Lıght"), sk.slug("Lght"))
 
     def test_slug_truncates_without_a_trailing_dash(self):
         self.assertEqual(sk.slug("a" * 60), "a" * 40)

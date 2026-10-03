@@ -72,7 +72,7 @@ Detection comes from volume and rhythm, so the limits are the point of this mode
 **Stop signals.** Any of these ends LinkedIn reading for the run at once, before another request:
 - an HTTP 429 or 999, or a 403 on an endpoint that worked earlier in the run;
 - a redirect to `/checkpoint/`, `/authwall`, `/uas/login` or a CAPTCHA page;
-- page text about restriction or unusual activity ("restricted", "unusual activity", "kısıtlandı", "olağan dışı").
+- page text about a restriction or unusual activity, in whatever language the account's interface uses ("restricted", "unusual activity", and their equivalents).
 
 Then set `linkedin.mode` back to `email` in `profile/search.json`, say so at the top of the report, and carry on with the other sources. Switching it back to `read` is the user's call.
 
