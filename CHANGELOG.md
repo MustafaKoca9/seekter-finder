@@ -4,6 +4,50 @@ The version is the git tag; there is no version file. Each release is also on
 [the releases page](https://github.com/selfishprimate/seekter/releases) with the
 same text.
 
+## v0.2.1 — 4 October 2026
+
+A bug-fix release. Both fixes are about the tracker letting something through
+that it should have stopped, and neither showed up as an error.
+
+### A second application to the same company could be rejected silently
+
+Greenhouse lets an employer auto-reject a candidate's further applications to a
+department within a window, or after a rejection. The rejected application is
+marked "blocked by auto reject rule", and the candidate is told only if the
+employer has switched the email on. Seekter treated a second role at the same
+company as a fresh posting, and on a good day it could send several. Measured
+2 Oct: two roles at one company and a second role at another went out the same
+afternoon. If the employer uses that rule, the second one may never have been
+read, and to a recruiter it looks like the mass applying they filter out.
+
+`check` now holds the company: it exits 2 with `HOLD` when there is already an
+application, a pending hand-off or a rejection there within the window, or an
+interview or offer at any date. The run skips a held posting, says which earlier
+role and date held it, and lists it under its own heading in the report so you
+can overrule it. When one run finds two roles at the same company, only the
+better fit goes out. A link you bring yourself counts as your decision and is
+applied, with a note. The window is `same_company_days` in `profile/search.json`,
+30 days by default.
+
+### `check` passed a bare LinkedIn id as new
+
+`check-many` has always read a bare number as a LinkedIn job id. `check` did not:
+it keyed the number as it was, matched nothing, and printed NEW for a job
+already in the tracker. Since 0.2.0 tells the run to dedup alert-mail postings
+on their LinkedIn id, that check could have let a duplicate through. Both
+commands now read the number the same way.
+
+### Also
+
+- One local-language search term in the Indeed notes was spelled in plain
+  ASCII, so the 0.2.0 language sweep missed it.
+
+### Upgrading
+
+Nothing to migrate. Without `same_company_days` in `profile/search.json`, the
+window is 30 days; add the key to change it. `profile/`, `applications/` and
+`runs/` are git-ignored and untouched.
+
 ## v0.2.0 — 4 October 2026
 
 The release that changes what Seekter does on LinkedIn. Until now it filled
