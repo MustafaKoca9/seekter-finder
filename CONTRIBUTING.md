@@ -14,6 +14,12 @@ Everything in `reference/` was learned by filling a real form or sweeping a real
 | A source you checked and found dead, paywalled or empty | `reference/sources/dead-and-low-value.md` | Say what you ran and what came back |
 | A bug in the tracker CLI or a sweep script | `scripts/` | Say how to reproduce it |
 | A change to how a command behaves | `.claude/skills/seekter-*/SKILL.md` | Open an issue first; these are the agent's instructions |
+| Anything larger than a fix: a new document, a translation, a new feature or command | Wherever the issue settles on | **Open a proposal issue first**, before writing it |
+
+**Propose before you build.** For anything larger than a fix, open a proposal issue and wait for a reply before you start. It costs a few minutes and can save you hours: a pull request built on a direction nobody agreed can't be merged however good the work is. Two things are already settled and worth knowing before proposing them:
+
+- **The repository is written in English only.** Skills, references and documents stay in one language so the kit reads the same for everyone. Translations go out of date with every change, and an outdated copy of a safety rule is worse than none. Language support is planned for the documentation on [seekter.dev](https://seekter.dev), where it can be kept current in one place, so translations belong there rather than in this repository.
+- **`CLAUDE.md` is the agent's instructions**, not a document for people. Claude Code reads only that file, so a copy of it in any other form is never read.
 
 **Before proposing a new board, read `reference/sources/dead-and-low-value.md`.** Most of the obvious candidates are already in it, with the measurement that killed them.
 
@@ -123,4 +129,4 @@ A reference change can't be unit-tested. Test it by doing the thing it describes
 2. Read your own diff before describing it.
 3. Fill in the pull request template. It asks what you measured and when, because that is the part a reviewer cannot check for you.
 
-Questions, or a source you aren't sure is worth adding: open an issue and ask. A measurement that turns out to be already known is a cheap thing to find out.
+Questions, or a source you aren't sure is worth adding: open an issue and ask. A larger change starts as a proposal issue (see **Propose before you build** above). A measurement that turns out to be already known is a cheap thing to find out.
