@@ -121,7 +121,7 @@ job_key: uuid:1e548ada-…
 `job_key` is a normalised identity (LinkedIn ID, ATS UUID, Greenhouse ID…), so the same job reached through LinkedIn, an aggregator and the company site is still caught as a duplicate.
 
 ```bash
-python3 scripts/seekter.py check <url> --company "Acme"     # exit 1 if already tracked
+python3 scripts/seekter.py check <url> --company "Acme"     # exit 1 if already tracked, 2 if the company is on hold
 python3 scripts/seekter.py move <url-or-file> rejected --note "form mail, 2 days"   # edits the status in place
 python3 scripts/seekter.py list --status pending
 python3 scripts/seekter.py stats --since 2026-09-01

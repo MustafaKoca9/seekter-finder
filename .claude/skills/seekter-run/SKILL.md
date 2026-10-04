@@ -27,7 +27,7 @@ If `profile/profile.md` is missing or still contains `{{`, stop and run `/seekte
 If the profile has no `Disclaimer accepted:` line with a date (a profile written before the line existed), show the disclaimer sentence from `/seekter-init` once, word for word. No: stop the run. Yes: add the line with today's date, then continue.
 
 Then:
-1. `python3 scripts/seekter.py stats` to see the tracker's size. Dedup is `python3 scripts/seekter.py check <url> --company <name>`: exit code 1 = already tracked.
+1. `python3 scripts/seekter.py stats` to see the tracker's size. Dedup is `python3 scripts/seekter.py check <url> --company <name>`: exit code 1 = already tracked, 2 = the company is on hold (§2.1.7).
 2. Open a task list in this order: the four source steps below, then **"Filter and rank"**, then **"Apply"**, then "Log to tracker" and "Report". Applying is one task at the end, not something interleaved with the sweeping, for the reason in §1.
 3. Load the Claude in Chrome tools in one ToolSearch call; check `tabs_context_mcp`. Without the extension, only the API work runs: step 1, the employer-board lookups of steps 0 and 2, and the API parts of step 3. Say so.
 
@@ -63,6 +63,14 @@ Rules:
 
 1.6 **Same company plus the same role title is a repost, not a new job.**
    `check` returns SAMECO and prints the earlier records with their status and role. **Read the role names it prints.** If one matches the posting in front of you, open that record before filling anything: the employer has almost certainly reposted under a new id after closing the first round. Measured 25 Sept: Scalable Capital's Digital Product Designer (m/f/x) was applied to on 9 Sept under SmartRecruiters id `744000148422454`, rejected on 18 Sept, and reposted as `744000151002344`; the 23 Sept run saw SAMECO, prepared the whole form anyway and handed it over. `job_key` is not at fault here and must not be "fixed" for it, because the two ids are genuinely different postings. This is a reading failure, and the fix is to read.
+
+1.7 **One application per company per window** (`same_company_days` in `profile/search.json`, 30 by default).
+   Greenhouse lets an employer auto-reject a candidate's further applications to a department inside a window, or after a rejection, and the candidate hears nothing unless the employer turns the email on ("blocked by auto reject rule"). A second role at the same company inside the window can be a silent loss, and to the recruiter it looks like the mass applying they are filtering out. Measured 2 Oct: two roles at one company and a second role at another went out the same afternoon.
+   `check` exits **2** with `HOLD` when the company has an application, a pending hand-off or a rejection inside the window, or an interview or offer at any date. Then:
+   - **Skip** it with the reason (`same company within <n> days: <earlier role>, <date>`), and list it in the report under its own heading so the user can overrule.
+   - **Two roles at one company in the same run, neither sent:** apply to the better fit only and skip the other with the same reason.
+   - **A link the user brought** (step 0) is the user saying so: apply, and say in the report that it was on hold.
+   - Never decide the window yourself; it is the profile's number.
 
 2.5 **Never triage a candidate list by regex alone.** Measured 24 Sept, and it cost the run most of its applications. After filtering 156 LinkedIn ids down to 88 clean candidates, the run scored them with a regex over the description (does it say "worldwide", "EMEA", the home country…), found that the remaining 65 scored zero, and dropped all 65 without opening one of them. Two of those 65 were applications: a Netherlands studio whose requirement list matched the candidate almost line for line, and a remote posting with no country restriction at all. The regex was not wrong, it was answering the wrong question. **A zero score means "no positive signal in the description", which is the definition of §3.3 tier B, not a reason to skip.** Use scores to decide the order you open candidates in, never to decide which ones you open. The only things that may remove a candidate without being opened are the hard filters in this section: dedup, blacklist, sensitive sector, language, and an explicit country list.
 
@@ -179,7 +187,7 @@ Use the profile's **voice** section and **fact bank**. Engine rules that always 
    - **Applied (n):** role · company · why it fits (one line each). Flag low-odds submissions and same-company second roles.
    - **Needs you (n):** one line each with a direct link and the exact action (CAPTCHA, account, anecdote, T&C, email verification, sector decision).
    - **On LinkedIn, yours to send (n):** Easy Apply postings and alert-mail postings whose employer board could not be found, one line each with the LinkedIn URL and the CV to pick.
-   - **Skipped:** grouped by reason.
+   - **Skipped:** grouped by reason. **On hold (same company within the window)** gets its own line, with the earlier role and date, because the user may want to overrule it.
 
 ## 8. Browser essentials
 

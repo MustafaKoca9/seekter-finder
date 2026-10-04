@@ -251,11 +251,54 @@ class TrackerTests(unittest.TestCase):
         self.assertIn("DUPLICATE", out)
 
     def test_same_company_different_role_is_not_a_duplicate(self):
-        self.add(company="Acme", role="Designer", url="https://acme.com/careers/1234567")
+        self.add(company="Acme", role="Designer", url="https://acme.com/careers/1234567",
+                 status="applied", applied="2020-01-01")
         rc, out, _ = self.run_cli("check", "https://acme.com/careers/7654321", "--company", "Acme")
         self.assertEqual(rc, 0)
         self.assertIn("NEW", out)
         self.assertIn("same company, other role", out)
+
+    # -- one application per company --------------------------------------
+
+    def test_a_second_role_at_the_same_company_within_the_window_is_held(self):
+        # Greenhouse can auto-reject further applications to a department inside
+        # a window and tell nobody. Measured 2 Oct: two roles at one company went
+        # out the same afternoon.
+        self.add(company="Acme", role="Designer", url="https://acme.com/careers/1234567",
+                 status="applied")
+        rc, out, _ = self.run_cli("check", "https://acme.com/careers/7654321", "--company", "Acme")
+        self.assertEqual(rc, 2, "a recent application at the same company must exit 2")
+        self.assertIn("HOLD", out)
+
+    def test_a_skip_at_the_same_company_holds_nothing(self):
+        self.add(company="Acme", role="Designer", url="https://acme.com/careers/1234567",
+                 status="skipped", notes="wrong country")
+        rc, out, _ = self.run_cli("check", "https://acme.com/careers/7654321", "--company", "Acme")
+        self.assertEqual(rc, 0)
+        self.assertNotIn("HOLD", out)
+
+    def test_a_live_interview_holds_the_company_whatever_the_date(self):
+        self.add(company="Acme", role="Designer", url="https://acme.com/careers/1234567",
+                 status="interviewing", applied="2020-01-01")
+        rc, out, _ = self.run_cli("check", "https://acme.com/careers/7654321", "--company", "Acme")
+        self.assertEqual(rc, 2)
+
+    def test_the_window_comes_from_the_profile(self):
+        (self.tmp / "profile").mkdir()
+        (self.tmp / "profile" / "search.json").write_text('{"same_company_days": 0}')
+        self.add(company="Acme", role="Designer", url="https://acme.com/careers/1234567",
+                 status="applied", applied="2020-01-01")
+        rc, _, _ = self.run_cli("check", "https://acme.com/careers/7654321", "--company", "Acme")
+        self.assertEqual(rc, 0)
+
+    def test_check_reads_a_bare_number_as_a_linkedin_id(self):
+        # Measured 4 Oct: `check <a bare LinkedIn id>` keyed the number as is and passed a
+        # tracked LinkedIn job as new; only `check-many` normalised it.
+        self.add(company="Acme", role="Designer",
+                 url="https://www.linkedin.com/jobs/view/4468710729/")
+        rc, out, _ = self.run_cli("check", "4468710729")
+        self.assertEqual(rc, 1)
+        self.assertIn("DUPLICATE", out)
 
     def test_add_refuses_a_duplicate_unless_forced(self):
         url = "https://acme.com/careers/1234567"
@@ -274,7 +317,7 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual(rc, 0)
         lines = [l for l in out.splitlines() if l.strip()]
         self.assertTrue(lines[0].startswith("DUP"), lines)
-        self.assertTrue(lines[1].startswith("SAMECO"), lines)
+        self.assertTrue(lines[1].startswith("HOLD"), lines)
 
     # -- status changes ---------------------------------------------------
 
