@@ -14,7 +14,7 @@ Seekter is a job-search agent that runs inside Claude Code: it searches job sour
 | `scripts/freehire_sweep.py` | Step 1 API sweep with the profile's queries | tracked |
 | `scripts/import_csv.py` | One-off import of an existing tracker (Notion/Sheets CSV) | tracked |
 | `tests/test_seekter.py` | Tracker CLI tests, stdlib only, throwaway repo per case: `python3 -m unittest discover tests`. Run it after any change to `scripts/` | tracked |
-| `CHANGELOG.md` · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `SECURITY.md` · `PRIVACY.md` · `DISCLAIMER.md` · `LICENSE` · `.github/` | The public-repo documents: what changed in each release, what belongs in `reference/` and the rules that govern it, conduct, the threat model and how to report, where user data goes, what the user is responsible for, MIT, the leak-scan workflow and the issue/PR templates | tracked |
+| `CHANGELOG.md` · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `SECURITY.md` · `PRIVACY.md` · `DISCLAIMER.md` · `MANIFESTO.md` · `LICENSE` · `.github/` | The public-repo documents: what changed in each release, what belongs in `reference/` and the rules that govern it, conduct, the threat model and how to report, where user data goes, what the user is responsible for, why the kit exists and the principles it is built on, MIT, the leak-scan workflow and the issue/PR templates | tracked |
 | `profile/` | The candidate: `profile.md`, `search.json`, `documents/` (CVs) | **ignored** |
 | `applications/<YYYY-MM>/` | One markdown file per application or hand-off, plus `skipped.md` (one row per skipped posting). `applications/README.md` is the generated overview | **ignored** |
 | `runs/` | One report per run, plus sweep output | **ignored** |
