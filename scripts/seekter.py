@@ -5,7 +5,7 @@ Layout: applications/<YYYY-MM>/ holds one markdown file per posting (status in t
 matter; files never move) plus skipped.md, one table row per posting that was passed over.
 applications/README.md and applications/<YYYY-MM>/README.md are generated views.
 
-  python3 scripts/seekter.py check <url> [--company NAME]
+  python3 scripts/seekter.py check <url|linkedin-id> [--company NAME]
   printf 'url | company\n4468710729\n' | python3 scripts/seekter.py check-many   (bare numbers = LinkedIn IDs)
   python3 scripts/seekter.py add --company X --role Y --status applied --url U [...]
   python3 scripts/seekter.py move <file|url> <status> [--note TEXT]
@@ -347,9 +347,15 @@ def fix_meta(r: dict) -> dict:
     return {k: (before[k], r.get(k, "")) for k in before if before[k] != r.get(k, "")}
 
 
+def bare_id_to_url(url: str) -> str:
+    """A bare number is a LinkedIn job id, in `check` as in `check-many`."""
+    url = url.strip()
+    return f"https://www.linkedin.com/jobs/view/{url}/" if url.isdigit() else url
+
+
 # ---------- commands ----------
 def cmd_check(a):
-    key = job_key(a.url)
+    key = job_key(bare_id_to_url(a.url))
     same, company = [], []
     for r in all_apps():
         if key and (r.get("job_key") == key or job_key(r.get("url", "")) == key):
@@ -375,8 +381,7 @@ def cmd_check_many(a):
         if not line:
             continue
         url, _, co = (x.strip() for x in line.partition("|"))
-        if url.isdigit():
-            url = f"https://www.linkedin.com/jobs/view/{url}/"
+        url = bare_id_to_url(url)
         r = keys.get(job_key(url))
         if r:
             print(f"DUP    {line} -> {r.get('status')} {label(r)}")

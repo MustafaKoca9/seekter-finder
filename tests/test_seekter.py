@@ -257,6 +257,15 @@ class TrackerTests(unittest.TestCase):
         self.assertIn("NEW", out)
         self.assertIn("same company, other role", out)
 
+    def test_check_reads_a_bare_number_as_a_linkedin_id(self):
+        # Measured 4 Oct: `check <a bare LinkedIn id>` keyed the number as is and passed a
+        # tracked LinkedIn job as new; only `check-many` normalised it.
+        self.add(company="Acme", role="Designer",
+                 url="https://www.linkedin.com/jobs/view/4468710729/")
+        rc, out, _ = self.run_cli("check", "4468710729")
+        self.assertEqual(rc, 1)
+        self.assertIn("DUPLICATE", out)
+
     def test_add_refuses_a_duplicate_unless_forced(self):
         url = "https://acme.com/careers/1234567"
         self.add(company="Acme", role="Designer", url=url)
