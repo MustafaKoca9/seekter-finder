@@ -1,6 +1,8 @@
 {
   "_comment": "Machine-readable search config. /seekter-init writes profile/search.json from this template, filling every value from the candidate's own field and geography. Human rules live in profile/profile.md.",
   "_title_filters": "title_keep = the title families worth opening, as one case-insensitive regex. title_drop = wrong seniority, wrong discipline, and the other industries that share your job title. Both are field-specific: build them from the candidate's target titles, then add false positives as runs reveal them. Worked example for a product designer: keep 'product design|\\bux\\b|design system|\\bdesigner\\b', drop 'junior|intern|head of|director|graphic|motion|industrial|mechanical|fpga|pcb|interior|fashion|textile|game artist' (the last eight are other industries whose jobs are also called 'designer').",
+  "_same_company_days": "One application per company within this many days. Greenhouse lets employers auto-reject further applications to a department inside a window, silently. A live interview or offer holds the company whatever the date. See /seekter-run section 2.",
+  "same_company_days": 30,
   "languages": ["en"],
   "blocked_domains": ["gambling", "adult"],
   "title_keep": "",

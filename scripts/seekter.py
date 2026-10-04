@@ -5,7 +5,7 @@ Layout: applications/<YYYY-MM>/ holds one markdown file per posting (status in t
 matter; files never move) plus skipped.md, one table row per posting that was passed over.
 applications/README.md and applications/<YYYY-MM>/README.md are generated views.
 
-  python3 scripts/seekter.py check <url|linkedin-id> [--company NAME]
+  python3 scripts/seekter.py check <url|linkedin-id> [--company NAME]   exit 0 new, 1 tracked, 2 hold (same company within the window)
   printf 'url | company\n4468710729\n' | python3 scripts/seekter.py check-many   (bare numbers = LinkedIn IDs)
   python3 scripts/seekter.py add --company X --role Y --status applied --url U [...]
   python3 scripts/seekter.py move <file|url> <status> [--note TEXT]
@@ -347,6 +347,32 @@ def fix_meta(r: dict) -> dict:
     return {k: (before[k], r.get(k, "")) for k in before if before[k] != r.get(k, "")}
 
 
+# ---------- one application per company ----------
+# Greenhouse lets an employer auto-reject a candidate's further applications to
+# a department within a window, or after a rejection, and the candidate is told
+# only if the employer switches that on ("blocked by auto reject rule"). So a
+# second role at the same company inside the window can be a silent loss that
+# also looks like spam. Measured 2 Oct: two roles at one company and a second
+# role at another went out the same afternoon. The window is the candidate's
+# (`same_company_days` in profile/search.json), 30 days by default.
+HOLDING = ("pending", "applied", "rejected")   # within the window
+ALWAYS_HOLDING = ("interviewing", "offer")      # a live process holds regardless of date
+
+
+def same_company_days() -> int:
+    try:
+        return int(json.loads((ROOT / "profile" / "search.json").read_text())["same_company_days"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return 30
+
+
+def holding(records, days):
+    since = (dt.date.today() - dt.timedelta(days=days)).isoformat()
+    return [r for r in records
+            if r.get("status") in ALWAYS_HOLDING
+            or (r.get("status") in HOLDING and (r.get("applied") or r.get("updated") or "") >= since)]
+
+
 def bare_id_to_url(url: str) -> str:
     """A bare number is a LinkedIn job id, in `check` as in `check-many`."""
     url = url.strip()
@@ -370,12 +396,19 @@ def cmd_check(a):
     print(f"NEW  key={key}")
     for r in company:
         print(f"  same company, other role: {r.get('status')} | {r.get('role')} | {r.get('applied') or r.get('updated')}")
+    days = same_company_days()
+    held = holding(company, days)
+    if held:
+        print(f"HOLD: one application per company per {days} days. Apply only if the user says so;"
+              f" otherwise skip with this reason, or pick the better-fitting role while neither has gone out.")
+        sys.exit(2)
 
 
 def cmd_check_many(a):
-    """stdin: one posting per line, 'url' or 'url | company'. Prints NEW / DUP / SAMECO per line."""
+    """stdin: one posting per line, 'url' or 'url | company'. Prints NEW / DUP / SAMECO / HOLD per line."""
     apps = list(all_apps())
     keys = {r.get("job_key") or job_key(r.get("url", "")): r for r in apps}
+    days = same_company_days()
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -387,7 +420,8 @@ def cmd_check_many(a):
             print(f"DUP    {line} -> {r.get('status')} {label(r)}")
             continue
         same = [x for x in apps if co and slug(co) in slug(x.get("company", ""), 80)]
-        print(("SAMECO " if same else "NEW    ") + line + (f" -> {len(same)} earlier: " + ", ".join(f"{x.get('status')}:{x.get('role')}" for x in same[:3]) if same else ""))
+        tag = "HOLD   " if holding(same, days) else "SAMECO " if same else "NEW    "
+        print(tag + line + (f" -> {len(same)} earlier: " + ", ".join(f"{x.get('status')}:{x.get('role')}" for x in same[:3]) if same else ""))
 
 
 def cmd_add(a):
