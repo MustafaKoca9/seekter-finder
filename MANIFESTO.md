@@ -1,4 +1,4 @@
-# Why Seekter exists
+# Manifesto
 
 ## The two sides of an application
 
